@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- IMPEDE A INDEXAÇÃO POR BUSCADORES COMO O GOOGLE -->
-    <meta name="robots" content="noindex, nofollow">
-    
     <title>Localizador de Veículos Offline</title>
+    <meta name="robots" content="noindex, nofollow">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons -->
@@ -34,28 +32,12 @@
         @keyframes slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
         #cameraPreview { transform: scaleX(-1); }
-        .options-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 2.5rem;
-            z-index: 10;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            background-color: var(--card-color);
-            border: 1px solid var(--border-color);
-        }
-        .options-menu.show {
-            display: block;
-        }
-        .restore-option {
-            border: 2px solid var(--border-color);
-            transition: all 0.2s ease-in-out;
-        }
-        .restore-option.selected {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px var(--primary-color);
-        }
+        .options-menu { display: none; position: absolute; right: 0; top: 2.5rem; z-index: 10; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); background-color: var(--card-color); border: 1px solid var(--border-color); }
+        .options-menu.show { display: block; }
+        .restore-option { border: 2px solid var(--border-color); transition: all 0.2s ease-in-out; }
+        .restore-option.selected { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-color); }
+        .help-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: 9999px; background-color: var(--text-muted-color); color: var(--card-color); font-weight: bold; cursor: pointer; font-size: 0.8rem; user-select: none; }
+        #tooltip { position: absolute; padding: 0.5rem 1rem; border-radius: 0.5rem; background-color: var(--bg-color); border: 1px solid var(--border-color); box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 60; max-width: 250px; }
     </style>
 </head>
 <body class="antialiased">
@@ -76,7 +58,7 @@
         <main>
             <div id="tab-search" class="tab-content active space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <label for="plateInput" class="text-xl font-bold mb-4 block">Consultar Placa</label>
+                    <label for="plateInput" class="text-xl font-bold mb-4 flex items-center gap-2">Consultar Placa <span class="help-icon" data-tooltip="Digite a placa completa ou parte dela para buscar. O sistema mostrará as correspondências.">?</span></label>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <input type="text" id="plateInput" placeholder="Digite a placa do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
                         <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Buscar</button>
@@ -87,17 +69,17 @@
 
             <div id="tab-list" class="tab-content space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-4">Filtrar Casos</h2>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">Filtrar e Ordenar Casos <span class="help-icon" data-tooltip="Os filtros funcionam em conjunto. Use o campo 'Modelo' para refinar ainda mais a busca.">?</span></h2>
                      <div class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="filtersContainer">
                             <!-- Selects will be populated by JS -->
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t" style="border-color: var(--border-color);">
+                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t" style="border-color: var(--border-color);">
                             <div class="sm:col-span-2">
                                 <label for="filter-modelo" class="block text-sm font-medium mb-1">Modelo</label>
                                 <input type="text" id="filter-modelo" placeholder="Digite parte do modelo..." class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
                             </div>
-                            <div class="flex items-end">
+                             <div class="flex items-end">
                                 <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
                                     <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir
                                 </button>
@@ -111,7 +93,7 @@
 
             <div id="tab-settings" class="tab-content space-y-6">
                  <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Dados e Relatórios</h2>
+                    <h2 class="text-xl font-bold mb-2">Dados e Relatórios <span class="help-icon" data-tooltip="Exporte todos os dados para um arquivo de backup seguro, ou gere relatórios em PDF/Excel.">?</span></h2>
                     <p class="mb-4" style="color: var(--text-muted-color);">Exporte seus dados ou visualize os logs de uso.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button id="exportListPdfBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-list-dashes"></i> Lista de Casos</button>
@@ -135,7 +117,7 @@
                     </div>
                 </div>
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados</h2>
+                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados <span class="help-icon" data-tooltip="Cole aqui o texto completo copiado do sistema para cadastrar um novo caso ou atualizar um existente pelo número do contrato.">?</span></h2>
                     <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para cadastrar ou atualizar um caso. A verificação é pelo número do contrato.</p>
                     <textarea id="dataInput" rows="10" class="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole o texto completo do caso aqui..."></textarea>
                     <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Salvar</button>
@@ -145,6 +127,7 @@
     </div>
 
     <!-- Modais e Overlays -->
+    <div id="tooltip" class="hidden"></div>
     <div id="loadingModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center"><div class="p-8 rounded-lg text-center shadow-2xl" style="background-color: var(--card-color);"><div class="animate-spin rounded-full h-16 w-16 border-t-4 mx-auto" style="border-top-color: var(--primary-color);"></div><p class="mt-4 text-xl font-semibold" id="loadingText">Processando...</p></div></div>
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
     <div id="logsModal" class="hidden fixed inset-0 custom-modal z-40 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" style="background-color: var(--card-color);"><div class="p-4 flex justify-between items-center" style="border-bottom: 1px solid var(--border-color);"><h3 class="text-xl font-bold">Logs de Atividade</h3><button id="closeLogsBtn"><i class="ph-fill ph-x-circle text-3xl" style="color: var(--text-muted-color);"></i></button></div><div id="logsContent" class="p-4 overflow-y-auto"></div></div></div>
@@ -169,7 +152,6 @@
                 dbName: 'VehicleLocatorDB', 
                 dbVersion: 4, 
                 resultsPerPage: 5,
-                // IMPORTANTE: Altere esta senha para algo seguro
                 password: '123'
             };
             
@@ -179,6 +161,7 @@
             const STORE_OBSERVATIONS = 'observations';
             const STORE_LOGS = 'logs';
             const STORE_BACKUPS = 'backups';
+            const AUTH_KEY = 'isAuthenticated';
 
             App.ui = {
                 appContainer: document.getElementById('app-container'),
@@ -193,6 +176,7 @@
                 filtersContainer: document.getElementById('filtersContainer'),
                 filterModelo: document.getElementById('filter-modelo'),
                 resetFiltersBtn: document.getElementById('resetFiltersBtn'),
+                tooltip: document.getElementById('tooltip'),
                 settings: {
                     backupBtn: document.getElementById('backupBtn'),
                     restoreBtn: document.getElementById('restoreBtn'),
@@ -226,8 +210,14 @@
             // =================================================================================
             App.Security = {
                 checkPassword() {
+                    if (sessionStorage.getItem(AUTH_KEY) === 'true') {
+                        App.ui.appContainer.style.display = 'block';
+                        return true;
+                    }
+
                     const enteredPassword = prompt("Por favor, digite a senha para acessar:", "");
                     if (enteredPassword === App.config.password) {
+                        sessionStorage.setItem(AUTH_KEY, 'true');
                         App.ui.appContainer.style.display = 'block';
                         return true;
                     } else {
@@ -327,6 +317,11 @@
                         if (e.target.closest('.case-card-main')) { this.switchTab('search'); App.ui.plateInput.value = card.dataset.plateValue; App.CaseManager.search(card.dataset.plateValue); }
                     });
                     document.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('help-icon')) {
+                            this.showTooltip(e.target, e.target.dataset.tooltip);
+                        } else if (!e.target.closest('#tooltip')) {
+                            this.hideTooltip();
+                        }
                         if (!e.target.closest('.options-menu-container')) {
                             document.querySelectorAll('.options-menu.show').forEach(menu => menu.classList.remove('show'));
                         }
@@ -396,6 +391,17 @@
                         App.ui.modals.restoreConfirmBtn.onclick = () => close(selectedStrategy);
                         App.ui.modals.restoreCancelBtn.onclick = () => close(null);
                     });
+                },
+                showTooltip(target, text) {
+                    const tooltip = App.ui.tooltip;
+                    tooltip.textContent = text;
+                    tooltip.classList.remove('hidden');
+                    const targetRect = target.getBoundingClientRect();
+                    tooltip.style.left = `${targetRect.left + (targetRect.width / 2) - (tooltip.offsetWidth / 2)}px`;
+                    tooltip.style.top = `${targetRect.bottom + 8}px`;
+                },
+                hideTooltip() {
+                    App.ui.tooltip.classList.add('hidden');
                 }
             };
             
@@ -785,11 +791,12 @@
                         c.garantia.marca + ' ' + c.garantia.modelo,
                         c.contrato,
                         c.garantia.placa,
-                        c.garantia.cor
+                        c.garantia.cor,
+                        c.garantia.valorFIPE || 'N/A'
                     ]);
 
                     doc.autoTable({
-                        head: [['Veículo', 'Contrato', 'Placa', 'Cor']],
+                        head: [['Veículo', 'Contrato', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
                         startY: 35
                     });
