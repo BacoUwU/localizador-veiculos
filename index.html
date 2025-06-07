@@ -55,13 +55,56 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px var(--primary-color);
         }
-        .help-icon {
-            cursor: help;
-            color: var(--text-muted-color);
-            transition: color 0.2s;
+        .help-icon-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .help-icon:hover {
-            color: var(--primary-color);
+        .help-tooltip {
+            visibility: hidden;
+            width: 220px;
+            background-color: #334155;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: normal;
+        }
+        .help-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+        .help-icon-wrapper:hover .help-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .help-icon {
+             display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            border: 1px solid var(--text-muted-color);
+            color: var(--text-muted-color);
+            margin-left: 0.5rem;
+            cursor: help;
         }
     </style>
 </head>
@@ -71,7 +114,7 @@
     <div class="container mx-auto max-w-4xl p-4">
         <header class="text-center mb-6">
             <h1 class="text-4xl font-bold flex items-center justify-center gap-3" style="color: var(--primary-color);"><i class="ph-bold ph-car"></i>Localizador</h1>
-            <p style="color: var(--text-muted-color);">Registro e Consulta Offline</p>
+            <p style="color: var(--text-muted-color);">Seu acompanhante para localizar veículos!</p>
         </header>
 
         <nav class="flex justify-around mb-6" style="border-bottom: 2px solid var(--border-color);">
@@ -83,10 +126,16 @@
         <main>
             <div id="tab-search" class="tab-content active space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <label for="plateInput" class="text-xl font-bold mb-4 block">Consultar Placa <i class="ph ph-question-mark help-icon" title="Digite a placa completa ou parcial para encontrar casos."></i></label>
+                    <label for="plateInput" class="text-xl font-bold mb-4 flex items-center">
+                        Consultar Matrícula
+                        <span class="help-icon-wrapper">
+                            <i class="ph ph-question-mark help-icon"></i>
+                            <span class="help-tooltip">Digite a matrícula completa ou parcial para encontrar casos.</span>
+                        </span>
+                    </label>
                     <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="plateInput" placeholder="Digite a placa do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
-                        <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Buscar</button>
+                        <input type="text" id="plateInput" placeholder="Digite a matrícula do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
+                        <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Procurar</button>
                     </div>
                 </div>
                 <div id="caseResult" class="hidden space-y-4"></div>
@@ -96,27 +145,19 @@
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
                     <h2 class="text-xl font-bold mb-4">Filtrar e Ordenar Casos</h2>
                      <div class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="filtersContainer">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="filtersContainer">
                              <!-- Selects de filtro serão populados por JS -->
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-4 border-t" style="border-color: var(--border-color);">
+                            <div class="lg:col-span-2">
                                 <label for="filter-modelo" class="block text-sm font-medium mb-1">Modelo</label>
                                 <input type="text" id="filter-modelo" placeholder="Digite parte do modelo..." class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
                             </div>
-                            <div>
-                               <label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label>
-                                <select id="sort-order" class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
-                                    <option value="placa">Placa</option>
-                                    <option value="fipe-desc">Maior Valor FIPE</option>
-                                    <option value="fipe-asc">Menor Valor FIPE</option>
-                                </select>
+                            <div class="flex items-end">
+                                <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
+                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir Filtros
+                                </button>
                             </div>
-                        </div>
-                        <div class="flex items-end pt-4 border-t" style="border-color: var(--border-color);">
-                            <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
-                                <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir Filtros
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -127,49 +168,61 @@
             <div id="tab-settings" class="tab-content space-y-6">
                  <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
                     <h2 class="text-xl font-bold mb-2">Dados e Relatórios</h2>
-                    <p class="mb-4" style="color: var(--text-muted-color);">Exporte seus dados ou visualize os logs de uso.</p>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Exporte os seus dados ou visualize os logs de utilização.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button id="exportListPdfBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-list-dashes"></i> Lista de Casos</button>
                         <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-pdf"></i> PDF Completo</button>
                         <button id="exportCsvBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-csv"></i> Excel (Visitas)</button>
                     </div>
-                     <button id="showLogsBtn" class="mt-4 w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-file-text"></i> Ver Logs de Uso</button>
+                     <button id="showLogsBtn" class="mt-4 w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-file-text"></i> Ver Logs de Utilização</button>
                 </div>
                 
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
                     <h2 class="text-xl font-bold mb-2">Aparência</h2>
-                    <div class="flex items-center justify-between"><label for="theme-toggle" class="text-lg">Tema do Aplicativo</label><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="theme-toggle" class="sr-only peer"><div class="w-14 h-8 bg-gray-400 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div></label></div>
+                    <div class="flex items-center justify-between"><label for="theme-toggle" class="text-lg">Tema da Aplicação</label><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="theme-toggle" class="sr-only peer"><div class="w-14 h-8 bg-gray-400 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div></label></div>
                 </div>
                 
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Backup e Restauração <i class="ph ph-question-mark help-icon" title="Faça um backup para segurança ou para mover dados entre aparelhos. A restauração oferece opção de mesclar (adicionar/atualizar) ou sobrescrever (apagar tudo e substituir)."></i></h2>
-                    <p class="mb-4" style="color: var(--text-muted-color);">Salve ou recupere todos os seus dados.</p>
+                    <h2 class="text-xl font-bold mb-2 flex items-center">
+                        Backup e Restauro 
+                        <span class="help-icon-wrapper">
+                            <i class="ph ph-question-mark help-icon"></i>
+                            <span class="help-tooltip">Faça um backup para segurança ou para mover dados. O restauro oferece as opções de "Mesclar" (adicionar/atualizar) ou "Sobrescrever" (apagar tudo e substituir).</span>
+                        </span>
+                    </h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Guarde ou recupere todos os seus dados.</p>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <button id="backupBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-download-simple"></i> Fazer Backup</button>
                         <button id="restoreBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-upload-simple"></i> Restaurar</button>
                     </div>
                 </div>
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados <i class="ph ph-question-mark help-icon" title="Cole o texto completo do sistema. O app irá extrair os dados e criar um novo caso ou atualizar um já existente, usando o número do contrato para evitar duplicidade."></i></h2>
-                    <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para cadastrar ou atualizar um caso.</p>
+                    <h2 class="text-xl font-bold mb-2 flex items-center">
+                        Analisar e Guardar Dados 
+                        <span class="help-icon-wrapper">
+                            <i class="ph ph-question-mark help-icon"></i>
+                            <span class="help-tooltip">Cole o texto completo do sistema. A app irá extrair os dados e criar um novo caso ou atualizar um já existente, usando o número do contrato para evitar duplicidade.</span>
+                        </span>
+                    </h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para registar ou atualizar um caso.</p>
                     <textarea id="dataInput" rows="10" class="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole o texto completo do caso aqui..."></textarea>
-                    <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Salvar</button>
+                    <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Guardar</button>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- Modais e Overlays -->
-    <div id="loadingModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center"><div class="p-8 rounded-lg text-center shadow-2xl" style="background-color: var(--card-color);"><div class="animate-spin rounded-full h-16 w-16 border-t-4 mx-auto" style="border-top-color: var(--primary-color);"></div><p class="mt-4 text-xl font-semibold" id="loadingText">Processando...</p></div></div>
+    <div id="loadingModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center"><div class="p-8 rounded-lg text-center shadow-2xl" style="background-color: var(--card-color);"><div class="animate-spin rounded-full h-16 w-16 border-t-4 mx-auto" style="border-top-color: var(--primary-color);"></div><p class="mt-4 text-xl font-semibold" id="loadingText">A processar...</p></div></div>
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
     <div id="logsModal" class="hidden fixed inset-0 custom-modal z-40 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" style="background-color: var(--card-color);"><div class="p-4 flex justify-between items-center" style="border-bottom: 1px solid var(--border-color);"><h3 class="text-xl font-bold">Logs de Atividade</h3><button id="closeLogsBtn"><i class="ph-fill ph-x-circle text-3xl" style="color: var(--text-muted-color);"></i></button></div><div id="logsContent" class="p-4 overflow-y-auto"></div></div></div>
     <div id="cameraModal" class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"><video id="cameraPreview" class="w-full h-full object-cover" autoplay playsinline></video><button id="capturePhotoBtn" class="absolute bottom-10 bg-white rounded-full w-20 h-20 p-1 border-4 focus:outline-none" style="border-color: var(--text-muted-color);"></button><button id="closeCameraBtn" class="absolute top-5 right-5 text-white bg-black bg-opacity-50 rounded-full p-2"><i class="ph-fill ph-x-circle text-4xl"></i></button></div>
     <div id="photoViewModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col relative" style="background-color: var(--card-color);"><button id="closePhotoViewBtn" class="absolute -top-3 -right-3 text-white bg-red-600 rounded-full p-1 z-10"><i class="ph-fill ph-x-circle text-3xl"></i></button><img id="photoViewImage" src="" alt="Foto do Avistamento" class="w-full h-full object-contain rounded-lg"></div></div>
-    <div id="confirmationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 id="confirmationTitle" class="text-xl font-bold mb-4">Confirmar Ação</h3><p id="confirmationMessage" class="mb-6" style="color: var(--text-muted-color);">Você tem certeza?</p><div class="flex justify-end gap-4"><button id="confirmCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="confirmOkBtn" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Confirmar</button></div></div></div>
-    <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 id="addressModalTitle" class="text-xl font-bold mb-4">Adicionar Endereço</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto do endereço:</label><textarea id="addressTextInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Rua Tal, 123, Bairro..."></textarea></div><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div><div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div><button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button></div><div class="flex justify-end gap-4 mt-6"><button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="addressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Salvar</button></div></div></div>
-    <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Salvar</button></div></div></div>
+    <div id="confirmationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 id="confirmationTitle" class="text-xl font-bold mb-4">Confirmar Ação</h3><p id="confirmationMessage" class="mb-6" style="color: var(--text-muted-color);">Tem a certeza?</p><div class="flex justify-end gap-4"><button id="confirmCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="confirmOkBtn" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Confirmar</button></div></div></div>
+    <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 id="addressModalTitle" class="text-xl font-bold mb-4">Adicionar Morada</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto da morada:</label><textarea id="addressTextInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Rua Tal, 123, Bairro..."></textarea></div><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div><div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div><button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button></div><div class="flex justify-end gap-4 mt-6"><button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="addressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
+    <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite a sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="imageSourceModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Imagem</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha a origem da imagem para a visita.</p><div class="space-y-4"><button id="takePictureBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Tirar Foto</button><button id="chooseGalleryBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-image"></i> Escolher da Galeria</button></div><div class="flex justify-end mt-6"><button id="imageSourceCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button></div></div></div>
-    <div id="restoreStrategyModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Restaurar Backup</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha como importar os dados do arquivo.</p><div class="space-y-4"><button data-strategy="merge" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Mesclar</strong><span class="text-sm">Adiciona novos dados e atualiza existentes. Preserva os dados atuais.</span></button><button data-strategy="overwrite" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Sobrescrever</strong><span class="text-sm text-red-400">APAGA TUDO e substitui pelos dados do backup. Use com cuidado.</span></button></div><div class="flex justify-end gap-4 mt-6"><button id="restoreCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="restoreConfirmBtn" class="px-6 py-2 text-white rounded-lg disabled:opacity-50" style="background-color: var(--primary-color);" disabled>Confirmar</button></div></div></div>
+    <div id="restoreStrategyModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Restaurar Backup</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha como importar os dados do ficheiro.</p><div class="space-y-4"><button data-strategy="merge" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Mesclar</strong><span class="text-sm">Adiciona novos dados e atualiza existentes. Preserva os dados atuais.</span></button><button data-strategy="overwrite" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Sobrescrever</strong><span class="text-sm text-red-400">APAGA TUDO e substitui pelos dados do backup. Use com cuidado.</span></button></div><div class="flex justify-end gap-4 mt-6"><button id="restoreCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="restoreConfirmBtn" class="px-6 py-2 text-white rounded-lg disabled:opacity-50" style="background-color: var(--primary-color);" disabled>Confirmar</button></div></div></div>
     <input type="file" id="imageUploadInput" class="hidden" accept="image/*">
     <input type="file" id="restoreFileInput" class="hidden" accept=".json">
 
@@ -338,7 +391,7 @@
                 showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
                 hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
                 showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
-                async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return; App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível acessar a câmera.','error')} },
+                async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return; App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível aceder à câmara.','error')} },
                 hideCamera() { if(App.state.cameraStream) App.state.cameraStream.getTracks().forEach(t=>t.stop()); App.ui.modals.camera.classList.add('hidden'); },
                 capturePhoto() { const c=document.createElement('canvas');c.width=App.ui.modals.cameraPreview.videoWidth;c.height=App.ui.modals.cameraPreview.videoHeight;const x=c.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(App.ui.modals.cameraPreview,0,0,c.width,c.height);c.toBlob(b=>this._saveSighting(b),'image/jpeg',0.9); this.hideCamera(); },
                 async showPhoto(id) { const s = await App.DBManager.get(STORE_SIGHTINGS,id); if(s?.photo){const u=URL.createObjectURL(s.photo);App.ui.modals.photoViewImage.src=u;App.ui.modals.photoView.classList.remove('hidden');App.ui.modals.photoViewImage.onload=()=>URL.revokeObjectURL(u)}else this.showToast('Foto não encontrada.','error')},
@@ -348,7 +401,7 @@
                 hideImageSourceModal() { App.ui.modals.imageSource.classList.add('hidden'); },
                 async _saveSighting(imageBlob) {
                     if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
-                    this.showLoading('Redimensionando e salvando...');
+                    this.showLoading('Redimensionando e guardando...');
                     const picaInstance = pica();
                     const offscreenCanvas = document.createElement('canvas');
                     const img = await createImageBitmap(imageBlob);
@@ -368,7 +421,7 @@
                     };
                     await App.DBManager.put(STORE_SIGHTINGS, sightingData);
                     this.hideLoading();
-                    this.showToast('Visita registrada!', 'success');
+                    this.showToast('Visita registada!', 'success');
                     if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
                 },
                 showRestoreStrategyModal() {
@@ -426,13 +479,13 @@
                     const asked = localStorage.getItem('initial_permissions_asked');
                     if (!asked) {
                         setTimeout(() => {
-                           this.request('câmera', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), false);
+                           this.request('câmara', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), false);
                            this.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), false);
                            localStorage.setItem('initial_permissions_asked', 'true');
                         }, 2000);
                     }
                 },
-                requestCamera: (showAlert = true) => App.PermissionsManager.request('câmera', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), showAlert),
+                requestCamera: (showAlert = true) => App.PermissionsManager.request('câmara', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), showAlert),
                 requestLocation: (showAlert = true) => App.PermissionsManager.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), showAlert),
                 async getLocation() { 
                     if(!(await this.requestLocation())) return null;
@@ -451,14 +504,14 @@
                     App.state.editingAddressId = addressId;
                     
                     if (addressId) {
-                        App.ui.modals.addressModalTitle.textContent = "Editar Endereço";
+                        App.ui.modals.addressModalTitle.textContent = "Editar Morada";
                         const addr = await App.DBManager.get(STORE_ADDRESSES, addressId);
                         App.ui.modals.addressTextInput.value = addr.tipo === 'GPS' ? '' : this.formatForEdit(addr);
                         App.ui.modals.addressObsInput.value = addr.observacoes || '';
                         App.ui.modals.useCurrentLocationBtn.style.display = 'none';
                         document.getElementById('gps-button-container').style.display = 'none';
                     } else {
-                        App.ui.modals.addressModalTitle.textContent = "Adicionar Endereço";
+                        App.ui.modals.addressModalTitle.textContent = "Adicionar Morada";
                         App.ui.modals.addressTextInput.value = ''; 
                         App.ui.modals.addressObsInput.value = '';
                         App.ui.modals.useCurrentLocationBtn.style.display = 'flex';
@@ -476,15 +529,15 @@
                         }
                         addr.observacoes = App.ui.modals.addressObsInput.value;
                         await App.DBManager.put(STORE_ADDRESSES, addr);
-                        App.UIManager.showToast('Endereço atualizado!', 'success');
+                        App.UIManager.showToast('Morada atualizada!', 'success');
                     } else {
                         const text = App.ui.modals.addressTextInput.value;
-                        if (!text) return App.UIManager.showToast('Endereço é obrigatório.', 'error');
+                        if (!text) return App.UIManager.showToast('A morada é obrigatória.', 'error');
                         const addr = this.parse(text);
                         addr.placaNormalizada = App.state.currentPlate;
                         addr.observacoes = App.ui.modals.addressObsInput.value;
                         await App.DBManager.put(STORE_ADDRESSES, addr);
-                        App.UIManager.showToast('Endereço salvo!', 'success');
+                        App.UIManager.showToast('Morada guardada!', 'success');
                     }
                     this.finishSave();
                 },
@@ -499,9 +552,9 @@
                 },
                 formatForEdit(addr) { return `${addr.logradouro||''}, ${addr.numero||'S/N'}, ${addr.bairro||''}, ${addr.cidade||''}, ${addr.estado||''}, ${addr.cep||''}`; },
                 format(addr) { let b=(addr.tipo==='GPS')?`📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})`:`🏠 ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;return b},
-                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Endereço: ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
+                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Morada: ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
                 async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
-                async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Endereço','Deseja apagar este endereço?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Endereço excluído.','success');App.CaseManager.search(p)}}
+                async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Morada','Deseja apagar esta morada?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Morada excluída.','success');App.CaseManager.search(p)}}
             };
             
             // =================================================================================
@@ -510,7 +563,7 @@
             App.ObservationManager = {
                 showObservationModal(plate) { App.state.currentPlate=plate; App.ui.modals.observationTextInput.value=''; App.ui.modals.observation.classList.remove('hidden'); },
                 hideObservationModal:()=>App.ui.modals.observation.classList.add('hidden'),
-                async saveObservation() { const t=App.ui.modals.observationTextInput.value;if(!t)return App.UIManager.showToast('Observação está vazia.','error');await App.DBManager.put(STORE_OBSERVATIONS,{placaNormalizada:App.state.currentPlate,text:t,timestamp:new Date()});App.UIManager.showToast('Observação salva!','success');this.hideObservationModal();App.CaseManager.search(App.state.currentPlate);},
+                async saveObservation() { const t=App.ui.modals.observationTextInput.value;if(!t)return App.UIManager.showToast('A observação está vazia.','error');await App.DBManager.put(STORE_OBSERVATIONS,{placaNormalizada:App.state.currentPlate,text:t,timestamp:new Date()});App.UIManager.showToast('Observação guardada!','success');this.hideObservationModal();App.CaseManager.search(App.state.currentPlate);},
                 async deleteObservation(id,p) { if(await App.UIManager.showConfirmation('Excluir Observação','Deseja apagar esta anotação?')){await App.DBManager.delete(STORE_OBSERVATIONS,id);App.UIManager.showToast('Observação excluída.','success');App.CaseManager.search(p)}}
             };
 
@@ -519,7 +572,7 @@
             // =================================================================================
             App.CaseManager = {
                 async search(plate) {
-                    App.UIManager.showLoading('Buscando...');
+                    App.UIManager.showLoading('A procurar...');
                     const allCases = await App.DBManager.getAll(STORE_CASES);
                     const normalizedPlate = App.PlateManager.normalize(plate);
                     const results = allCases.filter(c => c.placaNormalizada.includes(normalizedPlate));
@@ -572,12 +625,12 @@
                         {label: 'Contrato', value: caseData.contrato},
                         {label: 'Atraso Desde', value: caseData.atrasoDesde},
                         {label: 'Notificação', value: caseData.notificacao},
-                    ].map(item => item.value ? detailItem(item.label, item.value) : '').join('');
+                    ].map(item => (item.value && item.value !== 'N/A') ? detailItem(item.label, item.value) : '').join('');
 
                     const warrantyDetails = Object.entries(caseData.garantia).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('');
                     
-                    const sightingsHtml = sightings.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(s=>`<li data-sighting-id="${s.id}" data-plate="${s.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p><i class="ph-bold ph-calendar"></i> ${new Date(s.timestamp).toLocaleString('pt-BR')}</p>${s.location?`<p><i class="ph-bold ph-map-pin"></i> Lat: ${s.location.lat.toFixed(4)}, Lon: ${s.location.lon.toFixed(4)}</p>`:''}</div><div class="flex items-center gap-4 mt-2 sm:mt-0">${s.photo?`<button title="Ver Foto" class="view-photo-btn text-orange-400"><i class="ph-fill ph-camera text-3xl"></i></button>`:`<div class="w-[36px]"></div>`}<button title="Excluir Visita" class="delete-sighting-btn text-red-500"><i class="ph-fill ph-trash text-3xl"></i></button></div></li>`).join('')||`<li class="p-3">Nenhuma visita registrada.</li>`;
-                    const addressesHtml = addresses.map(a=>`<li data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2 relative" style="background-color: var(--input-bg);"><div class="flex-grow text-sm">${App.AddressManager.format(a)}</div><div class="flex items-center gap-2 mt-2 sm:mt-0"><button title="Navegar" class="navigate-btn text-green-500 p-2"><i class="ph-fill ph-navigation-arrow text-3xl"></i></button><div class="relative options-menu-container"><button title="Mais Opções" class="toggle-options-btn p-2" style="color:var(--text-muted-color);"><i class="ph-fill ph-dots-three-vertical text-3xl"></i></button><div class="options-menu"><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="edit-address-btn w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2">Editar</button><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="delete-address-btn w-full text-left px-4 py-2 text-red-500 hover:bg-gray-700 flex items-center gap-2">Excluir</button></div></div></div></li>`).join('')||`<li class="p-3">Nenhum endereço cadastrado.</li>`;
+                    const sightingsHtml = sightings.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(s=>`<li data-sighting-id="${s.id}" data-plate="${s.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p><i class="ph-bold ph-calendar"></i> ${new Date(s.timestamp).toLocaleString('pt-BR')}</p>${s.location?`<p><i class="ph-bold ph-map-pin"></i> Lat: ${s.location.lat.toFixed(4)}, Lon: ${s.location.lon.toFixed(4)}</p>`:''}</div><div class="flex items-center gap-4 mt-2 sm:mt-0">${s.photo?`<button title="Ver Foto" class="view-photo-btn text-orange-400"><i class="ph-fill ph-camera text-3xl"></i></button>`:`<div class="w-[36px]"></div>`}<button title="Excluir Visita" class="delete-sighting-btn text-red-500"><i class="ph-fill ph-trash text-3xl"></i></button></div></li>`).join('')||`<li class="p-3">Nenhuma visita registada.</li>`;
+                    const addressesHtml = addresses.map(a=>`<li data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2 relative" style="background-color: var(--input-bg);"><div class="flex-grow text-sm">${App.AddressManager.format(a)}</div><div class="flex items-center gap-2 mt-2 sm:mt-0"><button title="Navegar" class="navigate-btn text-green-500 p-2"><i class="ph-fill ph-navigation-arrow text-3xl"></i></button><div class="relative options-menu-container"><button title="Mais Opções" class="toggle-options-btn p-2" style="color:var(--text-muted-color);"><i class="ph-fill ph-dots-three-vertical text-3xl"></i></button><div class="options-menu"><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="edit-address-btn w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2">Editar</button><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="delete-address-btn w-full text-left px-4 py-2 text-red-500 hover:bg-gray-700 flex items-center gap-2">Excluir</button></div></div></div></li>`).join('')||`<li class="p-3">Nenhuma morada registada.</li>`;
                     const observationsHtml = observations.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(o=>`<li data-observation-id="${o.id}" data-plate="${o.placaNormalizada}" class="flex justify-between items-start p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p class="font-semibold" style="color: var(--text-muted-color);">${new Date(o.timestamp).toLocaleString('pt-BR')}</p><p>${o.text}</p></div><button title="Excluir Observação" class="delete-observation-btn text-red-500 flex-shrink-0"><i class="ph-fill ph-trash text-3xl"></i></button></li>`).join('')||`<li class="p-3">Nenhuma observação geral.</li>`;
                     
                     const caseStatus = caseData.status || 'aberto';
@@ -590,12 +643,12 @@
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${contractDetails}</div></div>
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${warrantyDetails}</div></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
-                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Endereços</h3><button data-plate="${caseData.placaNormalizada}" class="add-address-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${addressesHtml}</ul></div>
+                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Moradas</h3><button data-plate="${caseData.placaNormalizada}" class="add-address-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${addressesHtml}</ul></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Visitas e Avistamentos</h3><button data-plate="${caseData.placaNormalizada}" class="add-sighting-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Adicionar</button></div><ul class="space-y-2">${sightingsHtml}</ul></div>
                     </div>`;
                     App.ui.caseResult.classList.remove('hidden');
                 },
-                async deleteSighting(id, p) { if (await App.UIManager.showConfirmation('Excluir Visita', 'Deseja excluir este registro?')) { await App.DBManager.delete(STORE_SIGHTINGS, id); App.UIManager.showToast('Visita excluída.', 'success'); this.search(p); } },
+                async deleteSighting(id, p) { if (await App.UIManager.showConfirmation('Excluir Visita', 'Deseja excluir este registo?')) { await App.DBManager.delete(STORE_SIGHTINGS, id); App.UIManager.showToast('Visita excluída.', 'success'); this.search(p); } },
                 async toggleCaseStatus(plate) {
                     const caseData = await App.DBManager.get(STORE_CASES, plate);
                     if (!caseData) return;
@@ -611,9 +664,9 @@
                     }
                 },
                 async deleteCase(plate) {
-                    if (await App.UIManager.showConfirmation('Excluir Caso?', 'Esta ação é PERMANENTE e apagará todos os dados associados (visitas, endereços, etc). Deseja continuar?')) {
-                        if (await App.UIManager.showConfirmation('Confirmação Final', 'Última chance. Tem certeza que quer apagar este caso para sempre?')) {
-                            App.UIManager.showLoading('Excluindo caso...');
+                    if (await App.UIManager.showConfirmation('Excluir Caso?', 'Esta ação é PERMANENTE e apagará todos os dados associados (visitas, moradas, etc). Deseja continuar?')) {
+                        if (await App.UIManager.showConfirmation('Confirmação Final', 'Última oportunidade. Tem a certeza que quer apagar este caso para sempre?')) {
+                            App.UIManager.showLoading('A excluir caso...');
                             await Promise.all([ App.DBManager.delete(STORE_CASES, plate), ... (await App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', plate)).map(s => App.DBManager.delete(STORE_SIGHTINGS, s.id)), ... (await App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', plate)).map(a => App.DBManager.delete(STORE_ADDRESSES, a.id)), ... (await App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', plate)).map(o => App.DBManager.delete(STORE_OBSERVATIONS, o.id)) ]);
                             App.UIManager.hideLoading(); App.UIManager.showToast('Caso excluído com sucesso.', 'success');
                             App.ui.caseResult.innerHTML = ''; this.renderList();
@@ -621,23 +674,31 @@
                     }
                 },
                 async renderList() { 
-                    App.UIManager.showLoading('Carregando...');
+                    App.UIManager.showLoading('A carregar...');
                     const allCases = await App.DBManager.getAll(STORE_CASES);
                     const uq = {m:new Set(), a:new Set(), c:new Set()};
                     allCases.forEach(c=>{if(c.garantia.marca)uq.m.add(c.garantia.marca);if(c.garantia.ano)uq.a.add(c.garantia.ano);if(c.garantia.cor)uq.c.add(c.garantia.cor)});
                     
-                    const createSelect = (id, lbl, opts) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts}</select></div>`;
-                    const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" selected>Abertos</option><option value="encerrado">Encerrados</option><option value="todos">Todos</option></select></div>`;
-                    
-                    App.ui.filtersContainer.innerHTML = statusSelect + createSelect('filter-marca','Marca',[...uq.m].sort().map(m=>`<option>${m}</option>`).join(''))+createSelect('filter-ano','Ano',[...uq.a].sort((a,b)=>b.localeCompare(a)).map(a=>`<option>${a}</option>`).join(''))+createSelect('filter-cor','Cor',[...uq.c].sort().map(c=>`<option>${c}</option>`).join(''));
+                    const createSelect = (id, lbl, opts) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts}</select></div>`;
+                    const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" selected>Abertos</option><option value="encerrado">Encerrados</option><option value="todos">Todos</option></select></div>`;
+                    const sortSelect = `<div><label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label><select id="sort-order" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="placa">Matrícula</option><option value="fipe-desc">Maior Valor FIPE</option><option value="fipe-asc">Menor Valor FIPE</option></select></div>`;
+
+                    App.ui.filtersContainer.innerHTML = statusSelect 
+                        + createSelect('filter-marca','Marca',[...uq.m].sort().map(m=>`<option>${m}</option>`).join(''))
+                        + createSelect('filter-ano','Ano',[...uq.a].sort((a,b)=>b.localeCompare(a)).map(a=>`<option>${a}</option>`).join(''))
+                        + createSelect('filter-cor','Cor',[...uq.c].sort().map(c=>`<option>${c}</option>`).join(''))
+                        + sortSelect;
                     
                     const applyFiltersCallback = () => { App.state.currentPage = 1; this.applyFilters(allCases); };
-                    document.querySelectorAll('.filter-select, #sort-order').forEach(sel=>sel.onchange= applyFiltersCallback);
+                    document.querySelectorAll('.filter-select').forEach(sel=>sel.onchange = applyFiltersCallback);
                     App.ui.filterModelo.onkeyup = applyFiltersCallback;
                     App.ui.resetFiltersBtn.onclick = () => {
-                        document.querySelectorAll('.filter-select').forEach(sel => sel.value = sel.id === 'filter-status' ? 'aberto' : '');
+                        document.querySelectorAll('.filter-select').forEach(sel => {
+                            if (sel.id === 'filter-status') sel.value = 'aberto';
+                            else if (sel.id === 'sort-order') sel.value = 'placa';
+                            else sel.value = '';
+                        });
                         App.ui.filterModelo.value = '';
-                        App.ui.sortOrder.value = 'placa';
                         applyFiltersCallback();
                     };
 
@@ -645,13 +706,14 @@
                     App.UIManager.hideLoading();
                 },
                 applyFilters(allCases) {
+                    const getEl = id => document.getElementById(id);
                     const filters = {
-                        status: document.getElementById('filter-status').value,
-                        marca: document.getElementById('filter-marca').value,
-                        ano: document.getElementById('filter-ano').value,
-                        cor: document.getElementById('filter-cor').value,
+                        status: getEl('filter-status')?.value || 'aberto',
+                        marca: getEl('filter-marca')?.value || '',
+                        ano: getEl('filter-ano')?.value || '',
+                        cor: getEl('filter-cor')?.value || '',
                         modelo: App.ui.filterModelo.value.toUpperCase(),
-                        sort: App.ui.sortOrder.value,
+                        sort: getEl('sort-order')?.value || 'placa',
                     };
                     let filtered = allCases.filter(c => {
                         const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
@@ -682,7 +744,7 @@
                         
                         const statusIndicator = (c.status === 'encerrado') ? `<span class="text-xs font-bold text-yellow-400 bg-yellow-900/50 px-2 py-1 rounded-full">Encerrado</span>` : '';
                         
-                        card.innerHTML = `<div class="flex justify-between items-center gap-4"><div class="case-card-main flex-grow cursor-pointer"><div class="flex items-center gap-2"><h3 class="text-xl font-bold" style="color:var(--primary-color);">${c.garantia.marca} ${c.garantia.modelo}</h3>${statusIndicator}</div><p class="text-md" style="color:var(--text-muted-color);">Contrato: ${c.contrato || 'N/A'}<br>Placa: <strong>${c.garantia.placa}</strong> | Cor: ${c.garantia.cor}</p></div></div>`;
+                        card.innerHTML = `<div class="flex justify-between items-center gap-4"><div class="case-card-main flex-grow cursor-pointer"><div class="flex items-center gap-2"><h3 class="text-xl font-bold" style="color:var(--primary-color);">${c.garantia.marca} ${c.garantia.modelo}</h3>${statusIndicator}</div><p class="text-md" style="color:var(--text-muted-color);">Contrato: ${c.contrato || 'N/A'}<br>Matrícula: <strong>${c.garantia.placa}</strong> | Cor: ${c.garantia.cor}</p></div></div>`;
                         App.ui.caseList.appendChild(card);
                     });
                     App.ui.loadMoreBtn.classList.toggle('hidden', end >= filteredCases.length);
@@ -705,7 +767,6 @@
                              }
                              return value;
                          }
-                         // Fallback for single line format like "Info. Contrato: 12345"
                          const singleLineRegex = new RegExp(`${keyword}(\\s*|:)\\s*(.+)`, 'i');
                          const match = text.match(singleLineRegex);
                          if (match) return match[2].trim();
@@ -740,9 +801,9 @@
                 _mergeCaseData(existing, newData) { const merged = JSON.parse(JSON.stringify(existing)); for (const key in newData) { if (key !== 'garantia' && newData[key]) merged[key] = newData[key]; } if (newData.garantia) { if (!merged.garantia) merged.garantia = {}; for (const key in newData.garantia) { if (newData.garantia[key]) merged.garantia[key] = newData.garantia[key]; } } return merged; },
                 async saveParsedData(){
                     const text = App.ui.settings.dataInput.value; if(!text) return App.UIManager.showToast('Caixa de texto vazia.','error');
-                    App.UIManager.showLoading('Analisando...');
+                    App.UIManager.showLoading('A analisar...');
                     try {
-                        const parsedData = this.parse(text); if (!parsedData) throw new Error('Dados essenciais (placa, contrato) não encontrados no texto.');
+                        const parsedData = this.parse(text); if (!parsedData) throw new Error('Dados essenciais (matrícula, contrato) não encontrados no texto.');
                         const existingCase = await App.DBManager.get(STORE_CASES, parsedData.placaNormalizada);
                         if (existingCase) {
                             const updatedCase = this._mergeCaseData(existingCase, parsedData);
@@ -750,13 +811,13 @@
                             App.UIManager.showToast(`Caso ${parsedData.garantia.placa} atualizado!`, 'success');
                         } else {
                             await App.DBManager.put(STORE_CASES, parsedData);
-                            App.UIManager.showToast(`Novo caso para placa ${parsedData.garantia.placa} salvo!`, 'success');
+                            App.UIManager.showToast(`Novo caso para matrícula ${parsedData.garantia.placa} guardado!`, 'success');
                         }
                         App.UIManager.hideLoading(); App.ui.settings.dataInput.value = '';
                     } catch(e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Erro: ${e.message}`, 'error'); }
                 },
                 async backup() {
-                    App.UIManager.showLoading('Preparando backup...');
+                    App.UIManager.showLoading('A preparar backup...');
                     try {
                         const [cases, sightings, addresses, observations, logs] = await Promise.all([App.DBManager.getAll(STORE_CASES), App.DBManager.getAll(STORE_SIGHTINGS), App.DBManager.getAll(STORE_ADDRESSES), App.DBManager.getAll(STORE_OBSERVATIONS), App.DBManager.getAll(STORE_LOGS)]);
                         const picaInstance = pica();
@@ -781,7 +842,7 @@
                     const strategy = await App.UIManager.showRestoreStrategyModal();
                     if(!strategy) return;
                     
-                    App.UIManager.showLoading('Restaurando...');
+                    App.UIManager.showLoading('A restaurar...');
                     try {
                         const backupText = await file.text();
                         const backupData = JSON.parse(backupText);
@@ -799,7 +860,7 @@
                         
                         await App.DBManager.put(STORE_LOGS, { message: `Backup de ${new Date(backupData.timestamp).toLocaleString()} restaurado com modo ${strategy}.`, timestamp: new Date() });
 
-                        App.UIManager.hideLoading(); App.UIManager.showToast('Restauração concluída!','success');
+                        App.UIManager.hideLoading(); App.UIManager.showToast('Restauro concluído!','success');
                         if(document.getElementById('tab-list').classList.contains('active')) App.CaseManager.renderList();
                     } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Erro ao restaurar: ${e.message}`, 'error'); }
                 },
@@ -865,7 +926,7 @@
                     return doc;
                 },
                 async exportSingleCasePDF(plate) {
-                    App.UIManager.showLoading('Gerando PDF do Caso...');
+                    App.UIManager.showLoading('A gerar PDF do Caso...');
                     const caseData = await App.DBManager.get(STORE_CASES, plate);
                     if (!caseData) { App.UIManager.hideLoading(); return App.UIManager.showToast('Caso não encontrado.', 'error'); }
                     const doc = new window.jspdf.jsPDF();
@@ -874,7 +935,7 @@
                     App.UIManager.hideLoading();
                 },
                 async exportAllToPDF() {
-                    App.UIManager.showLoading('Gerando PDF Completo...');
+                    App.UIManager.showLoading('A gerar PDF Completo...');
                     try {
                         const { jsPDF } = window.jspdf;
                         const mainDoc = new jsPDF();
@@ -883,8 +944,7 @@
 
                         for (const [index, caseData] of cases.entries()) {
                              if (index > 0) mainDoc.addPage();
-                            // Update loading message
-                            App.UIManager.showLoading(`Processando PDF ${index + 1} de ${cases.length}...`);
+                            App.UIManager.showLoading(`A processar PDF ${index + 1} de ${cases.length}...`);
                             await this._generateSingleCasePdf(mainDoc, caseData);
                         }
                         mainDoc.save(`relatorio_completo_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -895,7 +955,7 @@
                     }
                 },
                  async exportListPDF() {
-                    App.UIManager.showLoading('Gerando Lista em PDF...');
+                    App.UIManager.showLoading('A gerar Lista em PDF...');
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     
@@ -926,7 +986,7 @@
                     ]);
 
                     doc.autoTable({
-                        head: [['Veículo', 'Placa', 'Cor', 'Valor FIPE']],
+                        head: [['Veículo', 'Matrícula', 'Cor', 'Valor FIPE']],
                         body,
                         startY: 35
                     });
@@ -935,12 +995,12 @@
                     App.UIManager.hideLoading();
                 },
                 async exportCSV() {
-                    App.UIManager.showLoading('Gerando CSV...');
+                    App.UIManager.showLoading('A gerar CSV...');
                     const sightings = await App.DBManager.getAll(STORE_SIGHTINGS);
                     if (sightings.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhuma visita para exportar.', 'error'); }
                     const cases = await App.DBManager.getAll(STORE_CASES);
                     const caseMap = new Map(cases.map(c => [c.placaNormalizada, c]));
-                    const headers = ['Data Visita','Lat Visita','Lon Visita','Placa','Marca','Modelo','Ano','Cor','Cliente','CPF','Contrato', 'Status'];
+                    const headers = ['Data Visita','Lat Visita','Lon Visita','Matrícula','Marca','Modelo','Ano','Cor','Cliente','CPF','Contrato', 'Status'];
                     let csvRows = [headers.join(',')];
                     for (const s of sightings) {
                         const c = caseMap.get(s.placaNormalizada);
@@ -964,13 +1024,13 @@
             document.addEventListener('DOMContentLoaded', async () => {
                 App.ThemeManager.init();
                 App.UIManager.init();
-                App.UIManager.showLoading('Inicializando...');
+                App.UIManager.showLoading('A inicializar...');
                 try {
                     await App.DBManager.open();
                     App.CaseManager.renderList();
                     App.PermissionsManager.requestInitialPermissions();
                     App.UIManager.hideLoading();
-                    App.UIManager.showToast('Pronto para uso!', 'success');
+                    App.UIManager.showToast('Pronto para utilização!', 'success');
                 } catch (e) {
                     App.UIManager.hideLoading();
                     App.UIManager.showToast(`Falha na inicialização: ${e.message}`, 'error');
