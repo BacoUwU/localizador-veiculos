@@ -154,7 +154,7 @@
                 dbName: 'VehicleLocatorDB', 
                 dbVersion: 4, 
                 resultsPerPage: 5,
-                password: '2055'
+                password: '123'
             };
             
             const STORE_CASES = 'cases';
@@ -335,13 +335,25 @@
                     document.querySelectorAll('.options-menu.show').forEach(m => m.classList.remove('show'));
                     if (!isShowing) menu.classList.add('show');
                 },
-                switchTab(tabId) { App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId)); App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`)); if (tabId === 'list') App.CaseManager.renderList(); },
+                switchTab(tabId) { App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId)); App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`); if (tabId === 'list') App.CaseManager.renderList(); },
                 showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
                 hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
                 showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
                 async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return this.showToast('Câmera negada.','error'); App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível acessar a câmera.','error')} },
                 hideCamera() { if(App.state.cameraStream) App.state.cameraStream.getTracks().forEach(t=>t.stop()); App.ui.modals.camera.classList.add('hidden'); },
-                capturePhoto() { const c=document.createElement('canvas');c.width=App.ui.modals.cameraPreview.videoWidth;c.height=App.ui.modals.cameraPreview.videoHeight;const x=c.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(App.ui.modals.cameraPreview,0,0,c.width,c.height);c.toBlob(b=>this._saveSighting(b),'image/jpeg',0.9); this.hideCamera(); },
+                capturePhoto() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = App.ui.modals.cameraPreview.videoWidth;
+                    canvas.height = App.ui.modals.cameraPreview.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(App.ui.modals.cameraPreview, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        this._saveSighting(blob);
+                    }, 'image/jpeg', 0.9);
+                    this.hideCamera();
+                },
                 async showPhoto(id) { const s = await App.DBManager.get(STORE_SIGHTINGS,id); if(s?.photo){const u=URL.createObjectURL(s.photo);App.ui.modals.photoViewImage.src=u;App.ui.modals.photoView.classList.remove('hidden');App.ui.modals.photoViewImage.onload=()=>URL.revokeObjectURL(u)}else this.showToast('Foto não encontrada.','error')},
                 hidePhoto:() => { App.ui.modals.photoView.classList.add('hidden'); App.ui.modals.photoViewImage.src=""; },
                 showConfirmation(title, message) { return new Promise(r => { App.ui.modals.confirmationTitle.textContent=title;App.ui.modals.confirmationMessage.textContent=message;App.ui.modals.confirmation.classList.remove('hidden');const c=res=>{App.ui.modals.confirmation.classList.add('hidden');r(res)};App.ui.modals.confirmOkBtn.onclick=()=>c(true);App.ui.modals.confirmCancelBtn.onclick=()=>c(false);}) },
@@ -850,34 +862,34 @@
                     App.UIManager.showToast(`Falha na inicialização: ${e.message}`, 'error');
                 }
                 
-                App.ui.searchPlateBtn.onclick = () => App.CaseManager.search(App.ui.plateInput.value);
-                App.ui.plateInput.onkeypress = (e) => { if (e.key === 'Enter') App.CaseManager.search(App.ui.plateInput.value); };
-                App.ui.settings.parseAndSaveBtn.onclick = () => App.DataManager.saveParsedData();
-                App.ui.settings.backupBtn.onclick = () => App.DataManager.backup();
-                App.ui.settings.restoreBtn.onclick = () => App.ui.settings.restoreFileInput.click();
-                App.ui.settings.restoreFileInput.onchange = e => App.DataManager.handleRestoreFile(e.target.files[0]);
-                App.ui.settings.exportPdfBtn.onclick = () => App.DataManager.exportAllToPDF();
-                App.ui.settings.exportCsvBtn.onclick = () => App.DataManager.exportCSV();
-                App.ui.settings.exportListPdfBtn.onclick = () => App.DataManager.exportListPDF();
-                App.ui.settings.showLogsBtn.onclick = async () => { 
+                App.ui.searchPlateBtn.addEventListener('click', () => { App.CaseManager.search(App.ui.plateInput.value); });
+                App.ui.plateInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { App.CaseManager.search(App.ui.plateInput.value); }});
+                App.ui.settings.parseAndSaveBtn.addEventListener('click', () => App.DataManager.saveParsedData());
+                App.ui.settings.backupBtn.addEventListener('click', () => App.DataManager.backup());
+                App.ui.settings.restoreBtn.addEventListener('click', () => App.ui.settings.restoreFileInput.click());
+                App.ui.settings.restoreFileInput.addEventListener('change', (e) => App.DataManager.handleRestoreFile(e.target.files[0]));
+                App.ui.settings.exportPdfBtn.addEventListener('click', () => App.DataManager.exportAllToPDF());
+                App.ui.settings.exportCsvBtn.addEventListener('click', () => App.DataManager.exportCSV());
+                App.ui.settings.exportListPdfBtn.addEventListener('click', () => App.DataManager.exportListPDF());
+                App.ui.settings.showLogsBtn.addEventListener('click', async () => { 
                     const logs = await App.DBManager.getAll(STORE_LOGS);
                     App.ui.modals.logsContent.innerHTML = logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(log => `<div class="p-2 text-sm" style="border-bottom: 1px solid var(--border-color);"><span class="font-semibold" style="color:var(--primary-color);">${new Date(log.timestamp).toLocaleString('pt-BR')}</span>: <span>${log.message}</span></div>`).join('');
                     App.ui.modals.logs.classList.remove('hidden'); 
-                };
-                App.ui.modals.closeLogsBtn.onclick = () => App.ui.modals.logs.classList.add('hidden');
-                App.ui.modals.closeCameraBtn.onclick = () => App.UIManager.hideCamera();
-                App.ui.modals.capturePhotoBtn.onclick = () => App.UIManager.capturePhoto();
-                App.ui.loadMoreBtn.onclick = () => App.CaseManager.loadMore();
-                App.ui.modals.closePhotoViewBtn.onclick = () => App.UIManager.hidePhoto();
-                App.ui.modals.addressSaveBtn.onclick = () => App.AddressManager.save();
-                App.ui.modals.useCurrentLocationBtn.onclick = () => App.AddressManager.saveFromGPS();
-                App.ui.modals.addressCancelBtn.onclick = () => App.AddressManager.hideAddressModal();
-                App.ui.modals.observationSaveBtn.onclick = () => App.ObservationManager.saveObservation();
-                App.ui.modals.observationCancelBtn.onclick = () => App.ObservationManager.hideObservationModal();
-                App.ui.modals.takePictureBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.UIManager.showCamera(); };
-                App.ui.modals.chooseGalleryBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.ui.imageUploadInput.click(); };
-                App.ui.modals.imageSourceCancelBtn.onclick = () => App.UIManager.hideImageSourceModal();
-                App.ui.imageUploadInput.onchange = e => { if(e.target.files[0]) App.UIManager._saveSighting(e.target.files[0]); };
+                });
+                App.ui.modals.closeLogsBtn.addEventListener('click', () => App.ui.modals.logs.classList.add('hidden'));
+                App.ui.modals.closeCameraBtn.addEventListener('click', () => App.UIManager.hideCamera());
+                App.ui.modals.capturePhotoBtn.addEventListener('click', () => App.UIManager.capturePhoto());
+                App.ui.loadMoreBtn.addEventListener('click', () => App.CaseManager.loadMore());
+                App.ui.modals.closePhotoViewBtn.addEventListener('click', () => App.UIManager.hidePhoto());
+                App.ui.modals.addressSaveBtn.addEventListener('click', () => App.AddressManager.save());
+                App.ui.modals.useCurrentLocationBtn.addEventListener('click', () => App.AddressManager.saveFromGPS());
+                App.ui.modals.addressCancelBtn.addEventListener('click', () => App.AddressManager.hideAddressModal());
+                App.ui.modals.observationSaveBtn.addEventListener('click', () => App.ObservationManager.saveObservation());
+                App.ui.modals.observationCancelBtn.addEventListener('click', () => App.ObservationManager.hideObservationModal());
+                App.ui.modals.takePictureBtn.addEventListener('click', () => { App.UIManager.hideImageSourceModal(); App.UIManager.showCamera(); });
+                App.ui.modals.chooseGalleryBtn.addEventListener('click', () => { App.UIManager.hideImageSourceModal(); App.ui.imageUploadInput.click(); });
+                App.ui.modals.imageSourceCancelBtn.addEventListener('click', () => App.UIManager.hideImageSourceModal());
+                App.ui.imageUploadInput.addEventListener('change', e => { if(e.target.files[0]) App.UIManager._saveSighting(e.target.files[0]); });
             });
         })();
     </script>
