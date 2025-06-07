@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- IMPEDE A INDEXAÇÃO POR BUSCADORES COMO O GOOGLE -->
+    <meta name="robots" content="noindex, nofollow">
+    
+    <title>Localizador de Veículos Offline</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Pica.js para imagens -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/9.0.1/pica.min.js"></script>
+    <!-- jsPDF para relatórios em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a; --card-color: #1e293b; --text-color: #f1f5f9; --text-muted-color: #94a3b8; --border-color: #334155; --primary-color: #3b82f6; --primary-hover: #2563eb; --input-bg: #334155;
+        }
+        html.light {
+            --bg-color: #f1f5f9; --card-color: #ffffff; --text-color: #1e293b; --text-muted-color: #64748b; --border-color: #e2e8f0; --primary-color: #2563eb; --primary-hover: #1d4ed8; --input-bg: #f1f5f9;
+        }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Inter', sans-serif; font-size: 16px; }
+        .tab-button { transition: all 0.3s ease; border-bottom: 4px solid transparent; color: var(--text-muted-color); }
+        .tab-button.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .custom-modal { background-color: rgba(0, 0, 0, 0.7); }
+        .toast { animation: slide-in 0.5s forwards, slide-out 0.5s 4.5s forwards; }
+        @keyframes slide-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+        #cameraPreview { transform: scaleX(-1); }
+        .options-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 2.5rem;
+            z-index: 10;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+        }
+        .options-menu.show {
+            display: block;
+        }
+        .restore-option {
+            border: 2px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .restore-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-color);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Container Principal -->
+    <div id="app-container" class="container mx-auto max-w-4xl p-4" style="display: none;">
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-bold flex items-center justify-center gap-3" style="color: var(--primary-color);"><i class="ph-bold ph-car"></i>Localizador</h1>
+            <p style="color: var(--text-muted-color);">Registro e Consulta Offline</p>
+        </header>
+
+        <nav class="flex justify-around mb-6" style="border-bottom: 2px solid var(--border-color);">
+            <button data-tab="search" class="tab-button active w-full py-4 text-lg font-semibold flex items-center justify-center gap-2"><i class="ph-bold ph-magnifying-glass text-2xl"></i> Consultar</button>
+            <button data-tab="list" class="tab-button w-full py-4 text-lg font-semibold flex items-center justify-center gap-2"><i class="ph-bold ph-list-bullets text-2xl"></i> Casos</button>
+            <button data-tab="settings" class="tab-button w-full py-4 text-lg font-semibold flex items-center justify-center gap-2"><i class="ph-bold ph-gear text-2xl"></i> Ajustes</button>
+        </nav>
+
+        <main>
+            <div id="tab-search" class="tab-content active space-y-6">
+                <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <label for="plateInput" class="text-xl font-bold mb-4 block">Consultar Placa</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="plateInput" placeholder="Digite a placa do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
+                        <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Buscar</button>
+                    </div>
+                </div>
+                <div id="caseResult" class="hidden space-y-4"></div>
+            </div>
+
+            <div id="tab-list" class="tab-content space-y-6">
+                <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-4">Filtrar Casos</h2>
+                     <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="filtersContainer">
+                            <!-- Selects will be populated by JS -->
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t" style="border-color: var(--border-color);">
+                            <div class="sm:col-span-2">
+                                <label for="filter-modelo" class="block text-sm font-medium mb-1">Modelo</label>
+                                <input type="text" id="filter-modelo" placeholder="Digite parte do modelo..." class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
+                            </div>
+                            <div class="flex items-end">
+                                <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
+                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="caseList" class="space-y-4"></div>
+                <div class="text-center mt-4"><button id="loadMoreBtn" class="hidden font-bold py-3 px-8 rounded-md" style="background-color: var(--card-color); border: 2px solid var(--border-color);">Carregar Mais</button></div>
+            </div>
+
+            <div id="tab-settings" class="tab-content space-y-6">
+                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-2">Dados e Relatórios</h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Exporte seus dados ou visualize os logs de uso.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <button id="exportListPdfBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-list-dashes"></i> Lista de Casos</button>
+                        <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-pdf"></i> PDF Completo</button>
+                        <button id="exportCsvBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-csv"></i> Excel (Visitas)</button>
+                    </div>
+                     <button id="showLogsBtn" class="mt-4 w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-file-text"></i> Ver Logs de Uso</button>
+                </div>
+                
+                <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-2">Aparência</h2>
+                    <div class="flex items-center justify-between"><label for="theme-toggle" class="text-lg">Tema do Aplicativo</label><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="theme-toggle" class="sr-only peer"><div class="w-14 h-8 bg-gray-400 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div></label></div>
+                </div>
+                
+                <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-2">Backup e Restauração</h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Salve ou recupere todos os seus dados.</p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button id="backupBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-download-simple"></i> Fazer Backup</button>
+                        <button id="restoreBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-upload-simple"></i> Restaurar</button>
+                    </div>
+                </div>
+                <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados</h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para cadastrar ou atualizar um caso. A verificação é pelo número do contrato.</p>
+                    <textarea id="dataInput" rows="10" class="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole o texto completo do caso aqui..."></textarea>
+                    <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Salvar</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modais e Overlays -->
+    <div id="loadingModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center"><div class="p-8 rounded-lg text-center shadow-2xl" style="background-color: var(--card-color);"><div class="animate-spin rounded-full h-16 w-16 border-t-4 mx-auto" style="border-top-color: var(--primary-color);"></div><p class="mt-4 text-xl font-semibold" id="loadingText">Processando...</p></div></div>
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <div id="logsModal" class="hidden fixed inset-0 custom-modal z-40 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" style="background-color: var(--card-color);"><div class="p-4 flex justify-between items-center" style="border-bottom: 1px solid var(--border-color);"><h3 class="text-xl font-bold">Logs de Atividade</h3><button id="closeLogsBtn"><i class="ph-fill ph-x-circle text-3xl" style="color: var(--text-muted-color);"></i></button></div><div id="logsContent" class="p-4 overflow-y-auto"></div></div></div>
+    <div id="cameraModal" class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"><video id="cameraPreview" class="w-full h-full object-cover" autoplay playsinline></video><button id="capturePhotoBtn" class="absolute bottom-10 bg-white rounded-full w-20 h-20 p-1 border-4 focus:outline-none" style="border-color: var(--text-muted-color);"></button><button id="closeCameraBtn" class="absolute top-5 right-5 text-white bg-black bg-opacity-50 rounded-full p-2"><i class="ph-fill ph-x-circle text-4xl"></i></button></div>
+    <div id="photoViewModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col relative" style="background-color: var(--card-color);"><button id="closePhotoViewBtn" class="absolute -top-3 -right-3 text-white bg-red-600 rounded-full p-1 z-10"><i class="ph-fill ph-x-circle text-3xl"></i></button><img id="photoViewImage" src="" alt="Foto do Avistamento" class="w-full h-full object-contain rounded-lg"></div></div>
+    <div id="confirmationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 id="confirmationTitle" class="text-xl font-bold mb-4">Confirmar Ação</h3><p id="confirmationMessage" class="mb-6" style="color: var(--text-muted-color);">Você tem certeza?</p><div class="flex justify-end gap-4"><button id="confirmCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="confirmOkBtn" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Confirmar</button></div></div></div>
+    <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 id="addressModalTitle" class="text-xl font-bold mb-4">Adicionar Endereço</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto do endereço:</label><textarea id="addressTextInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Rua Tal, 123, Bairro..."></textarea></div><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div><div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div><button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button></div><div class="flex justify-end gap-4 mt-6"><button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="addressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Salvar</button></div></div></div>
+    <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Salvar</button></div></div></div>
+    <div id="imageSourceModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Imagem</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha a origem da imagem para a visita.</p><div class="space-y-4"><button id="takePictureBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Tirar Foto</button><button id="chooseGalleryBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-image"></i> Escolher da Galeria</button></div><div class="flex justify-end mt-6"><button id="imageSourceCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button></div></div></div>
+    <div id="restoreStrategyModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Restaurar Backup</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha como importar os dados do arquivo.</p><div class="space-y-4"><button data-strategy="merge" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Mesclar</strong><span class="text-sm">Adiciona novos dados e atualiza existentes. Preserva os dados atuais.</span></button><button data-strategy="overwrite" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Sobrescrever</strong><span class="text-sm text-red-400">APAGA TUDO e substitui pelos dados do backup. Use com cuidado.</span></button></div><div class="flex justify-end gap-4 mt-6"><button id="restoreCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="restoreConfirmBtn" class="px-6 py-2 text-white rounded-lg disabled:opacity-50" style="background-color: var(--primary-color);" disabled>Confirmar</button></div></div></div>
+    <input type="file" id="imageUploadInput" class="hidden" accept="image/*">
+    <input type="file" id="restoreFileInput" class="hidden" accept=".json">
+
+    <script>
+        (function() {
+            // =================================================================================
+            // APP INITIALIZATION & CONFIG
+            // =================================================================================
+            const App = {};
+
+            App.config = { 
+                dbName: 'VehicleLocatorDB', 
+                dbVersion: 4, 
+                resultsPerPage: 5,
+                // IMPORTANTE: Altere esta senha para algo seguro
+                password: '123'
+            };
+            
+            const STORE_CASES = 'cases';
+            const STORE_SIGHTINGS = 'sightings';
+            const STORE_ADDRESSES = 'addresses';
+            const STORE_OBSERVATIONS = 'observations';
+            const STORE_LOGS = 'logs';
+            const STORE_BACKUPS = 'backups';
+
+            App.ui = {
+                appContainer: document.getElementById('app-container'),
+                themeToggle: document.getElementById('theme-toggle'),
+                tabs: document.querySelectorAll('.tab-button'),
+                tabContents: document.querySelectorAll('.tab-content'),
+                plateInput: document.getElementById('plateInput'),
+                searchPlateBtn: document.getElementById('searchPlateBtn'),
+                caseResult: document.getElementById('caseResult'),
+                caseList: document.getElementById('caseList'),
+                loadMoreBtn: document.getElementById('loadMoreBtn'),
+                filtersContainer: document.getElementById('filtersContainer'),
+                filterModelo: document.getElementById('filter-modelo'),
+                resetFiltersBtn: document.getElementById('resetFiltersBtn'),
+                settings: {
+                    backupBtn: document.getElementById('backupBtn'),
+                    restoreBtn: document.getElementById('restoreBtn'),
+                    restoreFileInput: document.getElementById('restoreFileInput'),
+                    dataInput: document.getElementById('dataInput'),
+                    parseAndSaveBtn: document.getElementById('parseAndSaveBtn'),
+                    showLogsBtn: document.getElementById('showLogsBtn'),
+                    exportPdfBtn: document.getElementById('exportPdfBtn'),
+                    exportCsvBtn: document.getElementById('exportCsvBtn'),
+                    exportListPdfBtn: document.getElementById('exportListPdfBtn'),
+                },
+                modals: {
+                    loading: document.getElementById('loadingModal'), loadingText: document.getElementById('loadingText'),
+                    toastContainer: document.getElementById('toastContainer'),
+                    logs: document.getElementById('logsModal'), logsContent: document.getElementById('logsContent'), closeLogsBtn: document.getElementById('closeLogsBtn'),
+                    camera: document.getElementById('cameraModal'), cameraPreview: document.getElementById('cameraPreview'), capturePhotoBtn: document.getElementById('capturePhotoBtn'), closeCameraBtn: document.getElementById('closeCameraBtn'),
+                    photoView: document.getElementById('photoViewModal'), photoViewImage: document.getElementById('photoViewImage'), closePhotoViewBtn: document.getElementById('closePhotoViewBtn'),
+                    confirmation: document.getElementById('confirmationModal'), confirmationTitle: document.getElementById('confirmationTitle'), confirmationMessage: document.getElementById('confirmationMessage'), confirmOkBtn: document.getElementById('confirmOkBtn'), confirmCancelBtn: document.getElementById('confirmCancelBtn'),
+                    address: document.getElementById('addressModal'), addressModalTitle: document.getElementById('addressModalTitle'), addressTextInput: document.getElementById('addressTextInput'), addressObsInput: document.getElementById('addressObsInput'), useCurrentLocationBtn: document.getElementById('useCurrentLocationBtn'), addressSaveBtn: document.getElementById('addressSaveBtn'), addressCancelBtn: document.getElementById('addressCancelBtn'),
+                    observation: document.getElementById('observationModal'), observationTextInput: document.getElementById('observationTextInput'), observationSaveBtn: document.getElementById('observationSaveBtn'), observationCancelBtn: document.getElementById('observationCancelBtn'),
+                    restoreStrategy: document.getElementById('restoreStrategyModal'), restoreConfirmBtn: document.getElementById('restoreConfirmBtn'), restoreCancelBtn: document.getElementById('restoreCancelBtn'),
+                    imageSource: document.getElementById('imageSourceModal'), takePictureBtn: document.getElementById('takePictureBtn'), chooseGalleryBtn: document.getElementById('chooseGalleryBtn'), imageSourceCancelBtn: document.getElementById('imageSourceCancelBtn'),
+                },
+                imageUploadInput: document.getElementById('imageUploadInput'),
+            };
+            
+            App.state = { currentPage: 1, currentPlate: null, cameraStream: null, editingAddressId: null };
+            
+            // =================================================================================
+            // SECURITY MANAGER
+            // =================================================================================
+            App.Security = {
+                checkPassword() {
+                    const enteredPassword = prompt("Por favor, digite a senha para acessar:", "");
+                    if (enteredPassword === App.config.password) {
+                        App.ui.appContainer.style.display = 'block';
+                        return true;
+                    } else {
+                        alert("Senha incorreta. Acesso negado.");
+                        document.body.innerHTML = '<h1 style="color: white; text-align: center; margin-top: 50px;">Acesso Negado</h1>';
+                        return false;
+                    }
+                }
+            };
+            
+            // =================================================================================
+            // THEME MANAGER
+            // =================================================================================
+            App.ThemeManager = {
+                init() {
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                    this.apply(savedTheme || (systemPrefersLight ? 'light' : 'dark'));
+                    App.ui.themeToggle.addEventListener('change', () => this.apply(App.ui.themeToggle.checked ? 'light' : 'dark'));
+                },
+                apply(theme) {
+                    document.documentElement.classList.toggle('light', theme === 'light');
+                    App.ui.themeToggle.checked = theme === 'light';
+                    localStorage.setItem('theme', theme);
+                }
+            };
+            
+            // =================================================================================
+            // DATABASE MANAGER (IndexedDB)
+            // =================================================================================
+            App.DBManager = {
+                db: null,
+                async open() {
+                    return new Promise((resolve, reject) => {
+                        if (this.db) return resolve(this.db);
+                        const request = indexedDB.open(App.config.dbName, App.config.dbVersion);
+                        request.onerror = (e) => reject("Erro DB: " + e.target.errorCode);
+                        request.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
+                        request.onupgradeneeded = (e) => {
+                            const db = e.target.result;
+                            const setupStore = (name, keyPath, indexes = []) => {
+                                if (!db.objectStoreNames.contains(name)) {
+                                    const store = db.createObjectStore(name, { keyPath, autoIncrement: keyPath === 'id' });
+                                    indexes.forEach(index => store.createIndex(index, index, { unique: false }));
+                                }
+                            };
+                            setupStore(STORE_CASES, 'placaNormalizada');
+                            setupStore(STORE_SIGHTINGS, 'id', ['placaNormalizada']);
+                            setupStore(STORE_ADDRESSES, 'id', ['placaNormalizada']);
+                            setupStore(STORE_OBSERVATIONS, 'id', ['placaNormalizada']);
+                            setupStore(STORE_LOGS, 'id');
+                            setupStore(STORE_BACKUPS, 'timestamp');
+                        };
+                    });
+                },
+                async transaction(stores, type, cb) {
+                    const t = (await this.open()).transaction(stores, type);
+                    return new Promise((res, rej) => { t.oncomplete = res; t.onerror = () => rej(t.error); cb(Array.isArray(stores) ? stores.map(s => t.objectStore(s)) : t.objectStore(stores)); });
+                },
+                get: (store, key) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.get(key).onsuccess = e => r(e.target.result))),
+                getAll: (store) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.getAll().onsuccess = e => r(e.target.result))),
+                getFromIndex: (store, idx, q) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.index(idx).getAll(q).onsuccess = e => r(e.target.result))),
+                put: (store, item) => App.DBManager.transaction(store, 'readwrite', s => s.put(item)),
+                delete: (store, key) => App.DBManager.transaction(store, 'readwrite', s => s.delete(key)),
+            };
+            
+            // =================================================================================
+            // UI MANAGER (Rendering and Interactions)
+            // =================================================================================
+            App.UIManager = {
+                init() {
+                    App.ui.tabs.forEach(tab => tab.addEventListener('click', () => this.switchTab(tab.dataset.tab)));
+                    App.ui.caseResult.addEventListener('click', (e) => {
+                        const btn = e.target.closest('button');
+                        if (!btn) return;
+
+                        if (btn.classList.contains('add-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate });
+                        else if (btn.classList.contains('add-observation-btn')) App.ObservationManager.showObservationModal(btn.dataset.plate);
+                        else if (btn.classList.contains('add-sighting-btn')) this.showImageSourceModal(btn.dataset.plate);
+                        else if (btn.classList.contains('toggle-status-btn')) App.CaseManager.toggleCaseStatus(btn.dataset.plate);
+                        else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
+                        else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
+                        else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
+                        else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
+                        else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
+                        else if (e.target.closest('li')) {
+                            const li = e.target.closest('li');
+                            if (e.target.closest('.view-photo-btn')) this.showPhoto(parseInt(li.dataset.sightingId));
+                            if (e.target.closest('.delete-sighting-btn')) App.CaseManager.deleteSighting(parseInt(li.dataset.sightingId), li.dataset.plate);
+                            if (e.target.closest('.navigate-btn')) App.AddressManager.navigate(parseInt(li.dataset.addressId));
+                            if (e.target.closest('.delete-observation-btn')) App.ObservationManager.deleteObservation(parseInt(li.dataset.observationId), li.dataset.plate);
+                        }
+                    });
+                    App.ui.caseList.addEventListener('click', e => {
+                        const card = e.target.closest('.case-card');
+                        if (!card) return;
+                        if (e.target.closest('.case-card-main')) { this.switchTab('search'); App.ui.plateInput.value = card.dataset.plateValue; App.CaseManager.search(card.dataset.plateValue); }
+                    });
+                    document.addEventListener('click', (e) => {
+                        if (!e.target.closest('.options-menu-container')) {
+                            document.querySelectorAll('.options-menu.show').forEach(menu => menu.classList.remove('show'));
+                        }
+                    });
+                },
+                toggleOptionsMenu(button) {
+                    const menu = button.nextElementSibling;
+                    const isShowing = menu.classList.contains('show');
+                    document.querySelectorAll('.options-menu.show').forEach(m => m.classList.remove('show'));
+                    if (!isShowing) menu.classList.add('show');
+                },
+                switchTab(tabId) { App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId)); App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`)); if (tabId === 'list') App.CaseManager.renderList(); },
+                showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
+                hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
+                showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
+                async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return this.showToast('Câmera negada.','error'); App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível acessar a câmera.','error')} },
+                hideCamera() { if(App.state.cameraStream) App.state.cameraStream.getTracks().forEach(t=>t.stop()); App.ui.modals.camera.classList.add('hidden'); },
+                capturePhoto() { const c=document.createElement('canvas');c.width=App.ui.modals.cameraPreview.videoWidth;c.height=App.ui.modals.cameraPreview.videoHeight;const x=c.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(App.ui.modals.cameraPreview,0,0,c.width,c.height);c.toBlob(b=>this._saveSighting(b),'image/jpeg',0.9); this.hideCamera(); },
+                async showPhoto(id) { const s = await App.DBManager.get(STORE_SIGHTINGS,id); if(s?.photo){const u=URL.createObjectURL(s.photo);App.ui.modals.photoViewImage.src=u;App.ui.modals.photoView.classList.remove('hidden');App.ui.modals.photoViewImage.onload=()=>URL.revokeObjectURL(u)}else this.showToast('Foto não encontrada.','error')},
+                hidePhoto:() => { App.ui.modals.photoView.classList.add('hidden'); App.ui.modals.photoViewImage.src=""; },
+                showConfirmation(title, message) { return new Promise(r => { App.ui.modals.confirmationTitle.textContent=title;App.ui.modals.confirmationMessage.textContent=message;App.ui.modals.confirmation.classList.remove('hidden');const c=res=>{App.ui.modals.confirmation.classList.add('hidden');r(res)};App.ui.modals.confirmOkBtn.onclick=()=>c(true);App.ui.modals.confirmCancelBtn.onclick=()=>c(false);}) },
+                showImageSourceModal(plate) { App.state.currentPlate = plate; App.ui.modals.imageSource.classList.remove('hidden'); },
+                hideImageSourceModal() { App.ui.modals.imageSource.classList.add('hidden'); },
+                async _saveSighting(imageBlob) {
+                    this.showLoading('Redimensionando imagem...');
+                    const picaInstance = pica();
+                    const offscreenCanvas = document.createElement('canvas');
+                    const img = await createImageBitmap(imageBlob);
+
+                    let targetWidth = 640; let targetHeight = 480;
+                    if (img.width > img.height) { targetHeight = (img.height / img.width) * targetWidth; } else { targetWidth = (img.width / img.height) * targetHeight; }
+                    offscreenCanvas.width = targetWidth; offscreenCanvas.height = targetHeight;
+                    
+                    const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
+                    const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
+                    this.hideLoading();
+
+                    await App.DBManager.put(STORE_SIGHTINGS, { placaNormalizada: App.state.currentPlate, timestamp: new Date(), location: await App.PermissionsManager.getLocation(), photo: resizedBlob });
+                    this.showToast('Visita registrada!', 'success');
+                    if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
+                },
+                showRestoreStrategyModal() {
+                    return new Promise(resolve => {
+                        const modal = App.ui.modals.restoreStrategy;
+                        const confirmBtn = App.ui.modals.restoreConfirmBtn;
+                        let selectedStrategy = null;
+
+                        modal.classList.remove('hidden');
+                        confirmBtn.disabled = true;
+
+                        const options = modal.querySelectorAll('.restore-option');
+                        options.forEach(opt => {
+                            opt.onclick = () => {
+                                options.forEach(o => o.classList.remove('selected'));
+                                opt.classList.add('selected');
+                                selectedStrategy = opt.dataset.strategy;
+                                confirmBtn.disabled = false;
+                            };
+                        });
+                        
+                        const close = (strategy) => {
+                             modal.classList.add('hidden');
+                             options.forEach(o => o.classList.remove('selected'));
+                             resolve(strategy);
+                        };
+
+                        App.ui.modals.restoreConfirmBtn.onclick = () => close(selectedStrategy);
+                        App.ui.modals.restoreCancelBtn.onclick = () => close(null);
+                    });
+                }
+            };
+            
+            // =================================================================================
+            // PERMISSIONS MANAGER
+            // =================================================================================
+            App.PermissionsManager = {
+                async request(name, queryFn) { const k=`${name}_permission`;if(localStorage.getItem(k)==='granted')return true;if(localStorage.getItem(k)==='denied')return false;try{await queryFn();localStorage.setItem(k,'granted');return true}catch(err){localStorage.setItem(k,'denied');return false}},
+                requestCamera:()=>App.PermissionsManager.request('camera',()=>navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop()))),
+                requestLocation:()=>App.PermissionsManager.request('location',()=>new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true}))),
+                async getLocation() { if(!(await this.requestLocation())) {App.UIManager.showToast('Localização negada.','error');return null} return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)))}
+            };
+            
+            App.PlateManager = { normalize: plate => plate ? plate.toUpperCase().replace(/[^A-Z0-9]/g, '') : '' };
+
+            // =================================================================================
+            // ADDRESS MANAGER
+            // =================================================================================
+            App.AddressManager = {
+                async showAddressModal({plate, addressId = null}) { 
+                    App.state.currentPlate = plate; 
+                    App.state.editingAddressId = addressId;
+                    
+                    if (addressId) {
+                        App.ui.modals.addressModalTitle.textContent = "Editar Endereço";
+                        const addr = await App.DBManager.get(STORE_ADDRESSES, addressId);
+                        App.ui.modals.addressTextInput.value = addr.tipo === 'GPS' ? '' : this.formatForEdit(addr);
+                        App.ui.modals.addressObsInput.value = addr.observacoes || '';
+                        App.ui.modals.useCurrentLocationBtn.style.display = 'none';
+                        document.getElementById('gps-button-container').style.display = 'none';
+                    } else {
+                        App.ui.modals.addressModalTitle.textContent = "Adicionar Endereço";
+                        App.ui.modals.addressTextInput.value = ''; 
+                        App.ui.modals.addressObsInput.value = '';
+                        App.ui.modals.useCurrentLocationBtn.style.display = 'flex';
+                        document.getElementById('gps-button-container').style.display = 'block';
+                    }
+                    App.ui.modals.address.classList.remove('hidden'); 
+                },
+                hideAddressModal:()=>App.ui.modals.address.classList.add('hidden'),
+                async save() {
+                    if (App.state.editingAddressId) {
+                        const addr = await App.DBManager.get(STORE_ADDRESSES, App.state.editingAddressId);
+                        if (addr.tipo !== 'GPS') {
+                            const newParsed = this.parse(App.ui.modals.addressTextInput.value);
+                            Object.assign(addr, newParsed);
+                        }
+                        addr.observacoes = App.ui.modals.addressObsInput.value;
+                        await App.DBManager.put(STORE_ADDRESSES, addr);
+                        App.UIManager.showToast('Endereço atualizado!', 'success');
+                    } else {
+                        const text = App.ui.modals.addressTextInput.value;
+                        if (!text) return App.UIManager.showToast('Endereço é obrigatório.', 'error');
+                        const addr = this.parse(text);
+                        addr.placaNormalizada = App.state.currentPlate;
+                        addr.observacoes = App.ui.modals.addressObsInput.value;
+                        await App.DBManager.put(STORE_ADDRESSES, addr);
+                        App.UIManager.showToast('Endereço salvo!', 'success');
+                    }
+                    this.finishSave();
+                },
+                async saveFromGPS() { const loc=await App.PermissionsManager.getLocation();if(!loc)return;await App.DBManager.put(STORE_ADDRESSES,{tipo:'GPS',latitude:loc.lat,longitude:loc.lon,observacoes:App.ui.modals.addressObsInput.value,placaNormalizada:App.state.currentPlate});this.finishSave(); },
+                finishSave() { this.hideAddressModal(); App.CaseManager.search(App.state.currentPlate);},
+                parse(text) {
+                    const R = (txt, regex, clean=true) => { const match = txt.match(regex); if (match) { if(clean) text = text.replace(match[0], ' '); return match[1].trim(); } return null; };
+                    text = ` ${text.toUpperCase().replace(/[.,-]/g, ' ').replace(/\s+/g, ' ')} `;
+                    const addr = { tipo: R(text, /(COMERCIAL|RESIDENCIAL)/, false) || 'Informado' };
+                    addr.cep = R(text, /(\d{5}\s?\d{3})/); addr.estado = R(text, / (AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO) /); addr.cidade = R(text, / (ALTA FLORESTA|SINOP)/) || R(text, / ([A-Z\s]{4,})(?=\s(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\s)/); addr.bairro = R(text, / (BAIRRO|B\.?|SETOR|ST|JD|JARDIM)\s?([A-Z\s\d]+?)(?=\s(\d{5}\s?\d{3})|\s(ALTA FLORESTA|SINOP)|,|$)/); addr.numero = R(text, / (\d+[A-Z]?)(?=\s|,|$)/); addr.logradouro = text.replace(/RUA|AV|AVENIDA|EST|ESTRADA/g, ' ').trim();
+                    return addr;
+                },
+                formatForEdit(addr) { return `${addr.logradouro||''}, ${addr.numero||'S/N'}, ${addr.bairro||''}, ${addr.cidade||''}, ${addr.estado||''}, ${addr.cep||''}`; },
+                format(addr) { let b=(addr.tipo==='GPS')?`📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})`:`🏠 ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;return b},
+                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Endereço: ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
+                async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
+                async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Endereço','Deseja apagar este endereço?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Endereço excluído.','success');App.CaseManager.search(p)}}
+            };
+            
+            // =================================================================================
+            // OBSERVATION MANAGER
+            // =================================================================================
+            App.ObservationManager = {
+                showObservationModal(plate) { App.state.currentPlate=plate; App.ui.modals.observationTextInput.value=''; App.ui.modals.observation.classList.remove('hidden'); },
+                hideObservationModal:()=>App.ui.modals.observation.classList.add('hidden'),
+                async saveObservation() { const t=App.ui.modals.observationTextInput.value;if(!t)return App.UIManager.showToast('Observação está vazia.','error');await App.DBManager.put(STORE_OBSERVATIONS,{placaNormalizada:App.state.currentPlate,text:t,timestamp:new Date()});App.UIManager.showToast('Observação salva!','success');this.hideObservationModal();App.CaseManager.search(App.state.currentPlate);},
+                async deleteObservation(id,p) { if(await App.UIManager.showConfirmation('Excluir Observação','Deseja apagar esta anotação?')){await App.DBManager.delete(STORE_OBSERVATIONS,id);App.UIManager.showToast('Observação excluída.','success');App.CaseManager.search(p)}}
+            };
+
+            // =================================================================================
+            // CASE MANAGER (Core App Logic)
+            // =================================================================================
+            App.CaseManager = {
+                async search(plate) {
+                    const p = App.PlateManager.normalize(plate); if (!p) return App.UIManager.showToast('Placa inválida.', 'error');
+                    App.UIManager.showLoading('Buscando caso...');
+                    const [caseData, sightings, addresses, observations] = await Promise.all([ App.DBManager.get(STORE_CASES, p), App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', p), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', p), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', p) ]);
+                    App.UIManager.hideLoading();
+                    if(caseData) this.renderCaseDetails(caseData, sightings, addresses, observations);
+                    else { App.ui.caseResult.innerHTML = `<div class="p-4 rounded-lg text-center" style="background-color: var(--card-color);">Nenhum caso para <strong>${p}</strong>.</div>`; App.ui.caseResult.classList.remove('hidden'); }
+                },
+                renderCaseDetails(caseData, sightings, addresses, observations) {
+                    const detailItem = (label, value) => `<p><strong class="font-semibold">${label}:</strong> ${value || 'N/A'}</p>`;
+                    const sightingsHtml = sightings.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(s=>`<li data-sighting-id="${s.id}" data-plate="${s.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p><i class="ph-bold ph-calendar"></i> ${new Date(s.timestamp).toLocaleString('pt-BR')}</p>${s.location?`<p><i class="ph-bold ph-map-pin"></i> Lat: ${s.location.lat.toFixed(4)}, Lon: ${s.location.lon.toFixed(4)}</p>`:''}</div><div class="flex items-center gap-4 mt-2 sm:mt-0">${s.photo?`<button title="Ver Foto" class="view-photo-btn text-orange-400"><i class="ph-fill ph-camera text-3xl"></i></button>`:`<div class="w-[36px]"></div>`}<button title="Excluir Visita" class="delete-sighting-btn text-red-500"><i class="ph-fill ph-trash text-3xl"></i></button></div></li>`).join('')||`<li class="p-3">Nenhuma visita registrada.</li>`;
+                    const addressesHtml = addresses.map(a=>`<li data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2 relative" style="background-color: var(--input-bg);"><div class="flex-grow text-sm">${App.AddressManager.format(a)}</div><div class="flex items-center gap-2 mt-2 sm:mt-0"><button title="Navegar" class="navigate-btn text-green-500 p-2"><i class="ph-fill ph-navigation-arrow text-3xl"></i></button><div class="relative options-menu-container"><button title="Mais Opções" class="toggle-options-btn p-2" style="color:var(--text-muted-color);"><i class="ph-fill ph-dots-three-vertical text-3xl"></i></button><div class="options-menu"><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="edit-address-btn w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2">Editar</button><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="delete-address-btn w-full text-left px-4 py-2 text-red-500 hover:bg-gray-700 flex items-center gap-2">Excluir</button></div></div></div></li>`).join('')||`<li class="p-3">Nenhum endereço cadastrado.</li>`;
+                    const observationsHtml = observations.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(o=>`<li data-observation-id="${o.id}" data-plate="${o.placaNormalizada}" class="flex justify-between items-start p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p class="font-semibold" style="color: var(--text-muted-color);">${new Date(o.timestamp).toLocaleString('pt-BR')}</p><p>${o.text}</p></div><button title="Excluir Observação" class="delete-observation-btn text-red-500 flex-shrink-0"><i class="ph-fill ph-trash text-3xl"></i></button></li>`).join('')||`<li class="p-3">Nenhuma observação geral.</li>`;
+                    
+                    const caseStatus = caseData.status || 'aberto';
+                    const statusText = caseStatus.toUpperCase() + (caseStatus === 'encerrado' && caseData.dataEncerramento ? ` em ${new Date(caseData.dataEncerramento).toLocaleDateString('pt-BR')}` : '');
+                    const toggleStatusBtnText = caseStatus === 'aberto' ? 'Marcar como Encerrado' : 'Reabrir Caso';
+                    const toggleStatusBtnColor = caseStatus === 'aberto' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700';
+
+                    App.ui.caseResult.innerHTML = `<div class="p-6 rounded-lg shadow-lg space-y-6" style="background-color: var(--card-color);">
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Status do Caso: <span class="${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${statusText}</span></h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button data-plate="${caseData.placaNormalizada}" class="toggle-status-btn w-full text-white font-bold py-2 px-4 rounded-md ${toggleStatusBtnColor}">${toggleStatusBtnText}</button><button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Exportar PDF do Caso</button><button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-md">Excluir Caso</button></div></div>
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${Object.entries(caseData).filter(([k])=>!['garantia','placaNormalizada','status','dataEncerramento'].includes(k)).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('')}</div></div>
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${Object.entries(caseData.garantia).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('')}</div></div>
+                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
+                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Endereços</h3><button data-plate="${caseData.placaNormalizada}" class="add-address-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${addressesHtml}</ul></div>
+                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Visitas e Avistamentos</h3><button data-plate="${caseData.placaNormalizada}" class="add-sighting-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Adicionar</button></div><ul class="space-y-2">${sightingsHtml}</ul></div>
+                    </div>`;
+                    App.ui.caseResult.classList.remove('hidden');
+                },
+                async deleteSighting(id, p) { if (await App.UIManager.showConfirmation('Excluir Visita', 'Deseja excluir este registro?')) { await App.DBManager.delete(STORE_SIGHTINGS, id); App.UIManager.showToast('Visita excluída.', 'success'); this.search(p); } },
+                async toggleCaseStatus(plate) {
+                    const caseData = await App.DBManager.get(STORE_CASES, plate);
+                    if (!caseData) return;
+                    const isClosing = (caseData.status || 'aberto') === 'aberto';
+                    const newStatus = isClosing ? 'encerrado' : 'aberto';
+                    const confirmationMessage = isClosing ? 'Deseja marcar este caso como encerrado?' : 'Deseja reabrir este caso?';
+                    if (await App.UIManager.showConfirmation('Alterar Status do Caso', confirmationMessage)) {
+                        caseData.status = newStatus;
+                        caseData.dataEncerramento = isClosing ? new Date().toISOString() : null;
+                        await App.DBManager.put(STORE_CASES, caseData);
+                        App.UIManager.showToast(`Caso ${newStatus}!`, 'success');
+                        this.search(plate);
+                    }
+                },
+                async deleteCase(plate) {
+                    if (await App.UIManager.showConfirmation('Excluir Caso?', 'Esta ação é PERMANENTE e apagará todos os dados associados (visitas, endereços, etc). Deseja continuar?')) {
+                        if (await App.UIManager.showConfirmation('Confirmação Final', 'Última chance. Tem certeza que quer apagar este caso para sempre?')) {
+                            App.UIManager.showLoading('Excluindo caso...');
+                            await Promise.all([ App.DBManager.delete(STORE_CASES, plate), ... (await App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', plate)).map(s => App.DBManager.delete(STORE_SIGHTINGS, s.id)), ... (await App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', plate)).map(a => App.DBManager.delete(STORE_ADDRESSES, a.id)), ... (await App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', plate)).map(o => App.DBManager.delete(STORE_OBSERVATIONS, o.id)) ]);
+                            App.UIManager.hideLoading(); App.UIManager.showToast('Caso excluído com sucesso.', 'success');
+                            App.ui.caseResult.innerHTML = ''; this.renderList();
+                        }
+                    }
+                },
+                async renderList() { 
+                    App.UIManager.showLoading('Carregando...');
+                    const allCases = await App.DBManager.getAll(STORE_CASES);
+                    const uq = {m:new Set(), a:new Set(), c:new Set()};
+                    allCases.forEach(c=>{if(c.garantia.marca)uq.m.add(c.garantia.marca);if(c.garantia.ano)uq.a.add(c.garantia.ano);if(c.garantia.cor)uq.c.add(c.garantia.cor)});
+                    
+                    const createSelect = (id, lbl, opts) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts}</select></div>`;
+                    const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" selected>Abertos</option><option value="encerrado">Encerrados</option><option value="todos">Todos</option></select></div>`;
+                    
+                    App.ui.filtersContainer.innerHTML = statusSelect + createSelect('filter-marca','Marca',[...uq.m].sort().map(m=>`<option>${m}</option>`).join(''))+createSelect('filter-ano','Ano',[...uq.a].sort((a,b)=>b.localeCompare(a)).map(a=>`<option>${a}</option>`).join(''))+createSelect('filter-cor','Cor',[...uq.c].sort().map(c=>`<option>${c}</option>`).join(''));
+                    
+                    const applyFiltersCallback = () => { App.state.currentPage = 1; this.applyFilters(allCases); };
+                    document.querySelectorAll('.filter-select').forEach(sel=>sel.onchange= applyFiltersCallback);
+                    App.ui.filterModelo.onkeyup = applyFiltersCallback;
+                    App.ui.resetFiltersBtn.onclick = () => {
+                        document.querySelectorAll('.filter-select').forEach(sel => sel.value = sel.id === 'filter-status' ? 'aberto' : '');
+                        App.ui.filterModelo.value = '';
+                        applyFiltersCallback();
+                    };
+
+                    this.applyFilters(allCases);
+                    App.UIManager.hideLoading();
+                },
+                applyFilters(allCases) {
+                    const filters = {
+                        status: document.getElementById('filter-status').value,
+                        marca: document.getElementById('filter-marca').value,
+                        ano: document.getElementById('filter-ano').value,
+                        cor: document.getElementById('filter-cor').value,
+                        modelo: App.ui.filterModelo.value.toUpperCase()
+                    };
+                    const filtered = allCases.filter(c => {
+                        const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
+                        const modelMatch = (c.garantia.modelo || '').toUpperCase().includes(filters.modelo);
+                        return statusMatch && modelMatch && (!filters.marca || c.garantia.marca === filters.marca) && (!filters.ano || c.garantia.ano === filters.ano) && (!filters.cor || c.garantia.cor === filters.cor);
+                    });
+                    this.displayFilteredCases(filtered);
+                },
+                displayFilteredCases(filteredCases) {
+                    const end = App.state.currentPage * App.config.resultsPerPage;
+                    if(App.state.currentPage === 1) App.ui.caseList.innerHTML = '';
+                    if(filteredCases.length === 0 && App.state.currentPage === 1) return App.ui.caseList.innerHTML = `<div class="p-4 rounded-lg text-center" style="background-color: var(--card-color);">Nenhum caso encontrado.</div>`;
+                    
+                    filteredCases.slice((App.state.currentPage-1) * App.config.resultsPerPage, end).forEach(c=>{
+                        const card = document.createElement('div');
+                        card.className = 'case-card p-4 rounded-lg shadow-md';
+                        card.style.backgroundColor = 'var(--card-color)';
+                        card.dataset.plate = c.placaNormalizada;
+                        card.dataset.plateValue = c.garantia.placa;
+                        
+                        const statusIndicator = (c.status === 'encerrado') ? `<span class="text-xs font-bold text-yellow-400 bg-yellow-900/50 px-2 py-1 rounded-full">Encerrado</span>` : '';
+                        
+                        card.innerHTML = `<div class="flex justify-between items-center gap-4"><div class="case-card-main flex-grow cursor-pointer"><div class="flex items-center gap-2"><h3 class="text-xl font-bold" style="color:var(--primary-color);">${c.garantia.marca} ${c.garantia.modelo}</h3>${statusIndicator}</div><p class="text-md" style="color:var(--text-muted-color);">Contrato: ${c.contrato || 'N/A'}<br>Placa: <strong>${c.garantia.placa}</strong> | Cor: ${c.garantia.cor}</p></div></div>`;
+                        App.ui.caseList.appendChild(card);
+                    });
+                    App.ui.loadMoreBtn.classList.toggle('hidden', end >= filteredCases.length);
+                },
+                loadMore() { App.state.currentPage++; App.DBManager.getAll(STORE_CASES).then(a=>this.applyFilters(a)); }
+            };
+            
+            // =================================================================================
+            // DATA MANAGER (Parse, Import, Export, Backup)
+            // =================================================================================
+            App.DataManager = {
+                parse(text) {
+                    const lines = text.toUpperCase().split('\n').map(line => line.trim()).filter(Boolean);
+                    const data = { garantia: {} };
+
+                    const keywordMap = {
+                        'INFO. CONTRATO:': { key: 'contrato' },
+                        'CLIENTE:': { key: 'cliente', clean: val => val.replace(/^\d+\s*-\s*/, '').trim() },
+                        'CPF/CNPJ': { key: 'cpf' },
+                        'TELEFONE PREFERENCIAL': { key: 'telefone' },
+                        'DESDE': { key: 'atrasoDesde' },
+                        'NOTIFICAÇÃO': { key: 'notificacao' },
+                        'MARCA/MODELO': { key: 'marcaModelo', target: 'garantia' },
+                        'ANO': { key: 'ano', target: 'garantia' },
+                        'PLACA': { key: 'placa', target: 'garantia' },
+                        'RENAVAM': { key: 'renavam', target: 'garantia' },
+                        'CHASSI': { key: 'chassi', target: 'garantia' },
+                        'COR': { key: 'cor', target: 'garantia' },
+                        'VALOR': { key: 'valorFIPE', target: 'garantia' }
+                    };
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        for (const keyword in keywordMap) {
+                            if (line.startsWith(keyword) || line === keyword) {
+                                let value = line.substring(keyword.length).trim();
+                                if ((!value || value.startsWith('R$') && keyword !== 'VALOR') && (i + 1 < lines.length) && !Object.keys(keywordMap).some(k => lines[i+1].startsWith(k))) {
+                                    value = lines[i + 1].trim(); i++; 
+                                }
+                                if (value) { const m = keywordMap[keyword]; const c = m.clean ? m.clean(value) : value; (m.target === 'garantia' ? data.garantia : data)[m.key] = c; }
+                                break; 
+                            }
+                        }
+                    }
+
+                    if (data.garantia.marcaModelo) { const [marca, ...modelo] = data.garantia.marcaModelo.split('/'); data.garantia.marca = marca?.trim(); data.garantia.modelo = modelo.join('/')?.trim(); delete data.garantia.marcaModelo; }
+                    data.placaNormalizada = App.PlateManager.normalize(data.garantia.placa);
+                    data.status = 'aberto';
+                    return data;
+                },
+                _mergeCaseData(existing, newData) { const merged = JSON.parse(JSON.stringify(existing)); for (const key in newData) { if (key !== 'garantia' && newData[key]) merged[key] = newData[key]; } if (newData.garantia) { if (!merged.garantia) merged.garantia = {}; for (const key in newData.garantia) { if (newData.garantia[key]) merged.garantia[key] = newData.garantia[key]; } } return merged; },
+                async saveParsedData(){
+                    const text = App.ui.settings.dataInput.value; if(!text) return App.UIManager.showToast('Caixa de texto vazia.','error');
+                    App.UIManager.showLoading('Analisando...');
+                    try {
+                        const parsedData = this.parse(text); if (!parsedData.placaNormalizada) throw new Error('Placa não pôde ser extraída do texto.');
+                        const allCases = await App.DBManager.getAll(STORE_CASES);
+                        const existingCase = allCases.find(c => c.contrato === parsedData.contrato);
+                        if (existingCase) {
+                            const updatedCase = this._mergeCaseData(existingCase, parsedData);
+                            updatedCase.placaNormalizada = existingCase.placaNormalizada; 
+                            await App.DBManager.put(STORE_CASES, updatedCase);
+                            App.UIManager.showToast(`Caso do contrato ${parsedData.contrato} atualizado!`, 'success');
+                        } else {
+                            await App.DBManager.put(STORE_CASES, parsedData);
+                            App.UIManager.showToast(`Novo caso para placa ${parsedData.garantia.placa} salvo!`, 'success');
+                        }
+                        App.UIManager.hideLoading(); App.ui.settings.dataInput.value = '';
+                    } catch(e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Erro: ${e.message}`, 'error'); }
+                },
+                async backup() {
+                    App.UIManager.showLoading('Preparando backup...');
+                    try {
+                        const [cases, sightings, addresses, observations, logs] = await Promise.all([App.DBManager.getAll(STORE_CASES), App.DBManager.getAll(STORE_SIGHTINGS), App.DBManager.getAll(STORE_ADDRESSES), App.DBManager.getAll(STORE_OBSERVATIONS), App.DBManager.getAll(STORE_LOGS)]);
+                        const picaInstance = pica();
+                        const blobToBase64 = blob => new Promise(resolve => { const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = () => resolve(reader.result); });
+                        for (const s of sightings) if (s.photo) { const img = await createImageBitmap(s.photo), canvas = document.createElement('canvas'), resized = await picaInstance.resize(img, canvas); s.photoBase64 = await blobToBase64(await picaInstance.toBlob(resized, 'image/jpeg', 0.7)); delete s.photo; }
+                        const dataBlob = new Blob([JSON.stringify({ version: 3, timestamp: new Date(), data: { cases, sightings, addresses, observations, logs } })], {type: 'application/json'});
+                        const link = document.createElement('a'); link.href = URL.createObjectURL(dataBlob); link.download = `backup_localizador_${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href);
+                        App.UIManager.hideLoading(); App.UIManager.showToast('Backup criado!', 'success');
+                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast('Falha no backup.', 'error'); }
+                },
+                restore() { App.ui.settings.restoreFileInput.click(); },
+                async handleRestoreFile(file){
+                    if(!file) return;
+                    
+                    const backupText = await file.text();
+                    const backupData = JSON.parse(backupText);
+                    const backupId = backupData.timestamp;
+
+                    const existingBackup = await App.DBManager.get(STORE_BACKUPS, backupId);
+                    if (existingBackup) {
+                        return App.UIManager.showToast('Este arquivo de backup já foi restaurado.', 'warning');
+                    }
+                    
+                    const strategy = await App.UIManager.showRestoreStrategyModal();
+                    if(!strategy) return;
+                    
+                    App.UIManager.showLoading('Restaurando...');
+                    try {
+                        if (strategy === 'overwrite') { 
+                            const storesToClear = [STORE_CASES, STORE_SIGHTINGS, STORE_ADDRESSES, STORE_OBSERVATIONS, STORE_LOGS];
+                            await Promise.all(storesToClear.map(s => App.DBManager.transaction(s, 'readwrite', st => st.clear())));
+                        }
+                        for(const item of backupData.data.cases) await App.DBManager.put(STORE_CASES, item);
+                        for(const item of backupData.data.sightings){ if(item.photoBase64) item.photo = await(await fetch(item.photoBase64)).blob(); delete item.photoBase64; await App.DBManager.put(STORE_SIGHTINGS, item); }
+                        if(backupData.data.addresses) for(const item of backupData.data.addresses) await App.DBManager.put(STORE_ADDRESSES, item);
+                        if(backupData.data.observations) for(const item of backupData.data.observations) await App.DBManager.put(STORE_OBSERVATIONS, item);
+                        if(backupData.data.logs) for(const item of backupData.data.logs) await App.DBManager.put(STORE_LOGS, item);
+                        
+                        await App.DBManager.put(STORE_BACKUPS, { timestamp: backupId });
+
+                        App.UIManager.hideLoading(); App.UIManager.showToast('Restauração concluída!','success');
+                        if(document.getElementById('tab-list').classList.contains('active')) App.CaseManager.renderList();
+                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast('Arquivo de backup inválido.', 'error'); }
+                },
+                _addPdfHeader(doc, caseData) { doc.setFontSize(18); doc.text(`Relatório do Caso: ${caseData.garantia.placa}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28); return 35; },
+                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                _addPdfObservations(doc, observations, startY) { if (observations.length > 0) { const body = observations.map(obs => [new Date(obs.timestamp).toLocaleString('pt-BR'), obs.text]); doc.autoTable({ head: [['Data', 'Observação Geral']], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                _addPdfVisits(doc, sightings, startY) { if (sightings.length > 0) { const body = sightings.map(s => { let t = `Data: ${new Date(s.timestamp).toLocaleString('pt-BR')}`; if (s.location) t += `\nLocal: Lat ${s.location.lat.toFixed(4)}, Lon ${s.location.lon.toFixed(4)}`; return [t]; }); doc.autoTable({ head: ['Visitas e Avistamentos'], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                
+                async _generateSingleCasePdf(caseData) {
+                    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+                    const [sightings, addresses, observations] = await Promise.all([ App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', caseData.placaNormalizada) ]);
+                    let lastY = this._addPdfHeader(doc, caseData);
+                    const caseDetails = Object.entries(caseData).filter(([k]) => !['garantia', 'placaNormalizada'].includes(k)).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v || 'N/A']);
+                    lastY = this._addPdfSection(doc, 'Informações do Contrato', caseDetails, lastY);
+                    const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v || 'N/A']);
+                    lastY = this._addPdfSection(doc, 'Dados da Garantia', warrantyDetails, lastY);
+                    lastY = this._addPdfObservations(doc, observations, lastY);
+                    const addressBody = addresses.map(addr => [App.AddressManager.formatForPdf(addr)]);
+                    lastY = this._addPdfSection(doc, 'Endereços e Observações', addressBody, lastY);
+                    this._addPdfVisits(doc, sightings, lastY);
+                    return doc;
+                },
+                async exportSingleCasePDF(plate) {
+                    App.UIManager.showLoading('Gerando PDF do Caso...');
+                    const caseData = await App.DBManager.get(STORE_CASES, plate);
+                    if (!caseData) { App.UIManager.hideLoading(); return App.UIManager.showToast('Caso não encontrado.', 'error'); }
+                    const doc = await this._generateSingleCasePdf(caseData);
+                    doc.save(`relatorio_${caseData.garantia.placa}.pdf`);
+                    App.UIManager.hideLoading();
+                },
+                async exportAllToPDF() {
+                    App.UIManager.showLoading('Gerando PDF Completo...');
+                    const { jsPDF } = window.jspdf;
+                    const mainDoc = new jsPDF();
+                    const cases = await App.DBManager.getAll(STORE_CASES);
+                    if(cases.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhum caso para exportar.', 'error'); }
+                    
+                    for (const [index, caseData] of cases.entries()) {
+                       const singleDoc = await this._generateSingleCasePdf(caseData);
+                       const pageCount = singleDoc.internal.getNumberOfPages();
+                       for (let i = 1; i <= pageCount; i++) {
+                           if (index > 0 || i > 1) mainDoc.addPage();
+                           mainDoc.setPage(mainDoc.internal.getNumberOfPages());
+                           mainDoc.addPage(singleDoc.internal.pages[i]);
+                       }
+                    }
+                    mainDoc.deletePage(1); // Delete the initial blank page
+                    mainDoc.save(`relatorio_completo_${new Date().toISOString().slice(0, 10)}.pdf`);
+                    App.UIManager.hideLoading();
+                },
+                 async exportListPDF() {
+                    App.UIManager.showLoading('Gerando Lista em PDF...');
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    const allCases = await App.DBManager.getAll(STORE_CASES);
+                    const filters = {
+                        status: document.getElementById('filter-status')?.value || 'aberto',
+                        marca: document.getElementById('filter-marca')?.value,
+                        ano: document.getElementById('filter-ano')?.value,
+                        cor: document.getElementById('filter-cor')?.value,
+                        modelo: document.getElementById('filter-modelo')?.value.toUpperCase() || ''
+                    };
+                    const filteredCases = allCases.filter(c => {
+                        const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
+                        const modelMatch = (c.garantia.modelo || '').toUpperCase().includes(filters.modelo);
+                        return statusMatch && modelMatch && (!filters.marca || c.garantia.marca === filters.marca) && (!filters.ano || c.garantia.ano === filters.ano) && (!filters.cor || c.garantia.cor === filters.cor);
+                    });
+
+                    if(filteredCases.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhum caso para exportar.', 'error'); }
+
+                    doc.setFontSize(18); doc.text(`Lista de Casos (${filters.status.toUpperCase()})`, 14, 22);
+                    doc.setFontSize(11); doc.setTextColor(100); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                    
+                    const body = filteredCases.map(c => [
+                        c.garantia.marca + ' ' + c.garantia.modelo,
+                        c.contrato,
+                        c.garantia.placa,
+                        c.garantia.cor
+                    ]);
+
+                    doc.autoTable({
+                        head: [['Veículo', 'Contrato', 'Placa', 'Cor']],
+                        body,
+                        startY: 35
+                    });
+
+                    doc.save(`lista_casos_${new Date().toISOString().slice(0, 10)}.pdf`);
+                    App.UIManager.hideLoading();
+                },
+                async exportCSV() {
+                    App.UIManager.showLoading('Gerando CSV...');
+                    const sightings = await App.DBManager.getAll(STORE_SIGHTINGS);
+                    if (sightings.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhuma visita para exportar.', 'error'); }
+                    const cases = await App.DBManager.getAll(STORE_CASES);
+                    const caseMap = new Map(cases.map(c => [c.placaNormalizada, c]));
+                    const headers = ['Data Visita','Lat Visita','Lon Visita','Placa','Marca','Modelo','Ano','Cor','Cliente','CPF','Contrato', 'Status'];
+                    let csvRows = [headers.join(',')];
+                    for (const s of sightings) {
+                        const c = caseMap.get(s.placaNormalizada);
+                        if (!c) continue;
+                        const row = [ `"${new Date(s.timestamp).toLocaleString('pt-BR')}"`, s.location ? s.location.lat : '', s.location ? s.location.lon : '', c.garantia.placa, c.garantia.marca, c.garantia.modelo, c.garantia.ano, c.garantia.cor, `"${c.cliente}"`, `"${c.cpf}"`, `"${c.contrato}"`, c.status || 'aberto' ];
+                        csvRows.push(row.join(','));
+                    }
+                    const blob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `relatorio_visitas_${new Date().toISOString().slice(0, 10)}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    App.UIManager.hideLoading();
+                },
+            };
+
+            // =================================================================================
+            // EVENT LISTENERS AND APP START
+            // =================================================================================
+            document.addEventListener('DOMContentLoaded', async () => {
+                if (!App.Security.checkPassword()) return;
+
+                App.ThemeManager.init();
+                App.UIManager.init();
+                App.UIManager.showLoading('Inicializando...');
+                try {
+                    await App.DBManager.open();
+                    await App.PermissionsManager.requestLocation();
+                    await App.PermissionsManager.requestCamera();
+                    App.UIManager.hideLoading();
+                    App.UIManager.showToast('Pronto para uso!', 'success');
+                } catch (e) {
+                    App.UIManager.hideLoading();
+                    App.UIManager.showToast(`Falha na inicialização: ${e.message}`, 'error');
+                }
+                
+                App.ui.searchPlateBtn.onclick = () => App.CaseManager.search(App.ui.plateInput.value);
+                App.ui.plateInput.onkeypress = (e) => { if (e.key === 'Enter') App.CaseManager.search(App.ui.plateInput.value); };
+                App.ui.settings.parseAndSaveBtn.onclick = () => App.DataManager.saveParsedData();
+                App.ui.settings.backupBtn.onclick = () => App.DataManager.backup();
+                App.ui.settings.restoreBtn.onclick = () => App.ui.settings.restoreFileInput.click();
+                App.ui.settings.restoreFileInput.onchange = e => App.DataManager.handleRestoreFile(e.target.files[0]);
+                App.ui.settings.exportPdfBtn.onclick = () => App.DataManager.exportAllToPDF();
+                App.ui.settings.exportCsvBtn.onclick = () => App.DataManager.exportCSV();
+                App.ui.settings.exportListPdfBtn.onclick = () => App.DataManager.exportListPDF();
+                App.ui.settings.showLogsBtn.onclick = async () => { 
+                    const logs = await App.DBManager.getAll(STORE_LOGS);
+                    App.ui.modals.logsContent.innerHTML = logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(log => `<div class="p-2 text-sm" style="border-bottom: 1px solid var(--border-color);"><span class="font-semibold" style="color:var(--primary-color);">${new Date(log.timestamp).toLocaleString('pt-BR')}</span>: <span>${log.message}</span></div>`).join('');
+                    App.ui.modals.logs.classList.remove('hidden'); 
+                };
+                App.ui.modals.closeLogsBtn.onclick = () => App.ui.modals.logs.classList.add('hidden');
+                App.ui.modals.closeCameraBtn.onclick = () => App.UIManager.hideCamera();
+                App.ui.modals.capturePhotoBtn.onclick = () => App.UIManager.capturePhoto();
+                App.ui.loadMoreBtn.onclick = () => App.CaseManager.loadMore();
+                App.ui.modals.closePhotoViewBtn.onclick = () => App.UIManager.hidePhoto();
+                App.ui.modals.addressSaveBtn.onclick = () => App.AddressManager.save();
+                App.ui.modals.useCurrentLocationBtn.onclick = () => App.AddressManager.saveFromGPS();
+                App.ui.modals.addressCancelBtn.onclick = () => App.AddressManager.hideAddressModal();
+                App.ui.modals.observationSaveBtn.onclick = () => App.ObservationManager.saveObservation();
+                App.ui.modals.observationCancelBtn.onclick = () => App.ObservationManager.hideObservationModal();
+                App.ui.modals.takePictureBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.UIManager.showCamera(); };
+                App.ui.modals.chooseGalleryBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.ui.imageUploadInput.click(); };
+                App.ui.modals.imageSourceCancelBtn.onclick = () => App.UIManager.hideImageSourceModal();
+                App.ui.imageUploadInput.onchange = e => { if(e.target.files[0]) App.UIManager._saveSighting(e.target.files[0]); };
+            });
+        })();
+    </script>
+</body>
+</html>
