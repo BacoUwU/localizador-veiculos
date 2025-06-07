@@ -1,12 +1,11 @@
-<!DOCTYPE html>Add commentMore actions
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- IMPEDE A INDEXAÇÃO POR BUSCADORES COMO O GOOGLE -->
+    <!-- Meta tag para impedir indexação por sites de busca -->
     <meta name="robots" content="noindex, nofollow">
-    
-    <title>Localizador de Veículos Offline</title>
+    <title>Acompanhamento de Localizador de Veículos</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons -->
@@ -56,12 +55,20 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px var(--primary-color);
         }
+        .help-icon {
+            cursor: help;
+            color: var(--text-muted-color);
+            transition: color 0.2s;
+        }
+        .help-icon:hover {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- Container Principal -->
-    <div id="app-container" class="container mx-auto max-w-4xl p-4" style="display: none;">
+    <div class="container mx-auto max-w-4xl p-4">
         <header class="text-center mb-6">
             <h1 class="text-4xl font-bold flex items-center justify-center gap-3" style="color: var(--primary-color);"><i class="ph-bold ph-car"></i>Localizador</h1>
             <p style="color: var(--text-muted-color);">Registro e Consulta Offline</p>
@@ -76,7 +83,7 @@
         <main>
             <div id="tab-search" class="tab-content active space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <label for="plateInput" class="text-xl font-bold mb-4 block">Consultar Placa</label>
+                    <label for="plateInput" class="text-xl font-bold mb-4 block">Consultar Placa <i class="ph ph-question-mark help-icon" title="Digite a placa completa ou parcial para encontrar casos."></i></label>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <input type="text" id="plateInput" placeholder="Digite a placa do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
                         <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Buscar</button>
@@ -87,21 +94,29 @@
 
             <div id="tab-list" class="tab-content space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-4">Filtrar Casos</h2>
+                    <h2 class="text-xl font-bold mb-4">Filtrar e Ordenar Casos</h2>
                      <div class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="filtersContainer">
-                            <!-- Selects will be populated by JS -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="filtersContainer">
+                             <!-- Selects de filtro serão populados por JS -->
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t" style="border-color: var(--border-color);">
-                            <div class="sm:col-span-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
                                 <label for="filter-modelo" class="block text-sm font-medium mb-1">Modelo</label>
                                 <input type="text" id="filter-modelo" placeholder="Digite parte do modelo..." class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
                             </div>
-                            <div class="flex items-end">
-                                <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
-                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir
-                                </button>
+                            <div>
+                               <label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label>
+                                <select id="sort-order" class="w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);">
+                                    <option value="placa">Placa</option>
+                                    <option value="fipe-desc">Maior Valor FIPE</option>
+                                    <option value="fipe-asc">Menor Valor FIPE</option>
+                                </select>
                             </div>
+                        </div>
+                        <div class="flex items-end pt-4 border-t" style="border-color: var(--border-color);">
+                            <button id="resetFiltersBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);">
+                                <i class="ph-bold ph-arrow-counter-clockwise"></i> Redefinir Filtros
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -127,7 +142,7 @@
                 </div>
                 
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Backup e Restauração</h2>
+                    <h2 class="text-xl font-bold mb-2">Backup e Restauração <i class="ph ph-question-mark help-icon" title="Faça um backup para segurança ou para mover dados entre aparelhos. A restauração oferece opção de mesclar (adicionar/atualizar) ou sobrescrever (apagar tudo e substituir)."></i></h2>
                     <p class="mb-4" style="color: var(--text-muted-color);">Salve ou recupere todos os seus dados.</p>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <button id="backupBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-download-simple"></i> Fazer Backup</button>
@@ -135,8 +150,8 @@
                     </div>
                 </div>
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
-                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados</h2>
-                    <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para cadastrar ou atualizar um caso. A verificação é pelo número do contrato.</p>
+                    <h2 class="text-xl font-bold mb-2">Analisar e Salvar Dados <i class="ph ph-question-mark help-icon" title="Cole o texto completo do sistema. O app irá extrair os dados e criar um novo caso ou atualizar um já existente, usando o número do contrato para evitar duplicidade."></i></h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Cole o texto do sistema para cadastrar ou atualizar um caso.</p>
                     <textarea id="dataInput" rows="10" class="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole o texto completo do caso aqui..."></textarea>
                     <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Salvar</button>
                 </div>
@@ -168,9 +183,7 @@
             App.config = { 
                 dbName: 'VehicleLocatorDB', 
                 dbVersion: 4, 
-                resultsPerPage: 5,
-                // IMPORTANTE: Altere esta senha para algo seguro
-                password: '123'
+                resultsPerPage: 5 
             };
             
             const STORE_CASES = 'cases';
@@ -181,7 +194,6 @@
             const STORE_BACKUPS = 'backups';
 
             App.ui = {
-                appContainer: document.getElementById('app-container'),
                 themeToggle: document.getElementById('theme-toggle'),
                 tabs: document.querySelectorAll('.tab-button'),
                 tabContents: document.querySelectorAll('.tab-content'),
@@ -193,6 +205,7 @@
                 filtersContainer: document.getElementById('filtersContainer'),
                 filterModelo: document.getElementById('filter-modelo'),
                 resetFiltersBtn: document.getElementById('resetFiltersBtn'),
+                sortOrder: document.getElementById('sort-order'),
                 settings: {
                     backupBtn: document.getElementById('backupBtn'),
                     restoreBtn: document.getElementById('restoreBtn'),
@@ -220,23 +233,6 @@
             };
             
             App.state = { currentPage: 1, currentPlate: null, cameraStream: null, editingAddressId: null };
-            
-            // =================================================================================
-            // SECURITY MANAGER
-            // =================================================================================
-            App.Security = {
-                checkPassword() {
-                    const enteredPassword = prompt("Por favor, digite a senha para acessar:", "");
-                    if (enteredPassword === App.config.password) {
-                        App.ui.appContainer.style.display = 'block';
-                        return true;
-                    } else {
-                        alert("Senha incorreta. Acesso negado.");
-                        document.body.innerHTML = '<h1 style="color: white; text-align: center; margin-top: 50px;">Acesso Negado</h1>';
-                        return false;
-                    }
-                }
-            };
             
             // =================================================================================
             // THEME MANAGER
@@ -342,7 +338,7 @@
                 showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
                 hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
                 showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
-                async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return this.showToast('Câmera negada.','error'); App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível acessar a câmera.','error')} },
+                async showCamera() { try { if(!(await App.PermissionsManager.requestCamera())) return; App.state.cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); App.ui.modals.cameraPreview.srcObject = App.state.cameraStream; App.ui.modals.camera.classList.remove('hidden'); } catch (err){this.showToast('Não foi possível acessar a câmera.','error')} },
                 hideCamera() { if(App.state.cameraStream) App.state.cameraStream.getTracks().forEach(t=>t.stop()); App.ui.modals.camera.classList.add('hidden'); },
                 capturePhoto() { const c=document.createElement('canvas');c.width=App.ui.modals.cameraPreview.videoWidth;c.height=App.ui.modals.cameraPreview.videoHeight;const x=c.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(App.ui.modals.cameraPreview,0,0,c.width,c.height);c.toBlob(b=>this._saveSighting(b),'image/jpeg',0.9); this.hideCamera(); },
                 async showPhoto(id) { const s = await App.DBManager.get(STORE_SIGHTINGS,id); if(s?.photo){const u=URL.createObjectURL(s.photo);App.ui.modals.photoViewImage.src=u;App.ui.modals.photoView.classList.remove('hidden');App.ui.modals.photoViewImage.onload=()=>URL.revokeObjectURL(u)}else this.showToast('Foto não encontrada.','error')},
@@ -351,7 +347,8 @@
                 showImageSourceModal(plate) { App.state.currentPlate = plate; App.ui.modals.imageSource.classList.remove('hidden'); },
                 hideImageSourceModal() { App.ui.modals.imageSource.classList.add('hidden'); },
                 async _saveSighting(imageBlob) {
-                    this.showLoading('Redimensionando imagem...');
+                    if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
+                    this.showLoading('Redimensionando e salvando...');
                     const picaInstance = pica();
                     const offscreenCanvas = document.createElement('canvas');
                     const img = await createImageBitmap(imageBlob);
@@ -362,9 +359,15 @@
                     
                     const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                     const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
+                    
+                    const sightingData = { 
+                        placaNormalizada: App.state.currentPlate, 
+                        timestamp: new Date(), 
+                        location: await App.PermissionsManager.getLocation(), 
+                        photo: resizedBlob 
+                    };
+                    await App.DBManager.put(STORE_SIGHTINGS, sightingData);
                     this.hideLoading();
-
-                    await App.DBManager.put(STORE_SIGHTINGS, { placaNormalizada: App.state.currentPlate, timestamp: new Date(), location: await App.PermissionsManager.getLocation(), photo: resizedBlob });
                     this.showToast('Visita registrada!', 'success');
                     if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
                 },
@@ -403,10 +406,38 @@
             // PERMISSIONS MANAGER
             // =================================================================================
             App.PermissionsManager = {
-                async request(name, queryFn) { const k=`${name}_permission`;if(localStorage.getItem(k)==='granted')return true;if(localStorage.getItem(k)==='denied')return false;try{await queryFn();localStorage.setItem(k,'granted');return true}catch(err){localStorage.setItem(k,'denied');return false}},
-                requestCamera:()=>App.PermissionsManager.request('camera',()=>navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop()))),
-                requestLocation:()=>App.PermissionsManager.request('location',()=>new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true}))),
-                async getLocation() { if(!(await this.requestLocation())) {App.UIManager.showToast('Localização negada.','error');return null} return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)))}
+                async request(name, queryFn, showAlert = true) {
+                     const k=`permission_${name}_status`; 
+                     if(localStorage.getItem(k) === 'denied') {
+                         if (showAlert) App.UIManager.showToast(`A permissão de ${name} foi negada anteriormente.`, 'error');
+                         return false;
+                     }
+                    try {
+                        await queryFn();
+                        localStorage.setItem(k,'granted');
+                        return true;
+                    } catch (err) {
+                        if (showAlert) App.UIManager.showToast(`Permissão de ${name} negada.`, 'error');
+                        localStorage.setItem(k,'denied');
+                        return false;
+                    }
+                },
+                requestInitialPermissions() {
+                    const asked = localStorage.getItem('initial_permissions_asked');
+                    if (!asked) {
+                        setTimeout(() => {
+                           this.request('câmera', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), false);
+                           this.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), false);
+                           localStorage.setItem('initial_permissions_asked', 'true');
+                        }, 2000);
+                    }
+                },
+                requestCamera: (showAlert = true) => App.PermissionsManager.request('câmera', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), showAlert),
+                requestLocation: (showAlert = true) => App.PermissionsManager.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), showAlert),
+                async getLocation() { 
+                    if(!(await this.requestLocation())) return null;
+                    return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)));
+                }
             };
             
             App.PlateManager = { normalize: plate => plate ? plate.toUpperCase().replace(/[^A-Z0-9]/g, '') : '' };
@@ -488,15 +519,63 @@
             // =================================================================================
             App.CaseManager = {
                 async search(plate) {
-                    const p = App.PlateManager.normalize(plate); if (!p) return App.UIManager.showToast('Placa inválida.', 'error');
-                    App.UIManager.showLoading('Buscando caso...');
-                    const [caseData, sightings, addresses, observations] = await Promise.all([ App.DBManager.get(STORE_CASES, p), App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', p), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', p), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', p) ]);
+                    App.UIManager.showLoading('Buscando...');
+                    const allCases = await App.DBManager.getAll(STORE_CASES);
+                    const normalizedPlate = App.PlateManager.normalize(plate);
+                    const results = allCases.filter(c => c.placaNormalizada.includes(normalizedPlate));
+
                     App.UIManager.hideLoading();
-                    if(caseData) this.renderCaseDetails(caseData, sightings, addresses, observations);
-                    else { App.ui.caseResult.innerHTML = `<div class="p-4 rounded-lg text-center" style="background-color: var(--card-color);">Nenhum caso para <strong>${p}</strong>.</div>`; App.ui.caseResult.classList.remove('hidden'); }
+                    
+                    if (results.length > 0) {
+                        if (results.length === 1) {
+                            const caseData = results[0];
+                            const [sightings, addresses, observations] = await Promise.all([ App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', caseData.placaNormalizada) ]);
+                            this.renderCaseDetails(caseData, sightings, addresses, observations);
+                        } else {
+                           this.renderSearchResultsList(results, plate);
+                        }
+                    } else { 
+                        App.ui.caseResult.innerHTML = `<div class="p-4 rounded-lg text-center" style="background-color: var(--card-color);">Nenhum caso para a busca <strong>"${plate}"</strong>.</div>`; 
+                    }
+                    App.ui.caseResult.classList.remove('hidden');
+                },
+                renderSearchResultsList(results, searchTerm) {
+                    let html = `<div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Resultados para "${searchTerm}"</h3><ul class="space-y-3">`;
+                    results.forEach(caseData => {
+                        html += `
+                           <li class="p-3 rounded-lg flex justify-between items-center" style="background-color: var(--input-bg);">
+                               <div>
+                                   <p class="font-bold text-lg">${caseData.garantia.placa}</p>
+                                   <p class="text-sm" style="color:var(--text-muted-color);">${caseData.garantia.marca} ${caseData.garantia.modelo}</p>
+                               </div>
+                               <button class="view-details-from-list text-white font-bold py-2 px-4 rounded-md" style="background-color:var(--primary-color);" data-plate="${caseData.garantia.placa}">Ver Detalhes</button>
+                           </li>
+                        `;
+                    });
+                    html += `</ul></div>`;
+                    App.ui.caseResult.innerHTML = html;
+
+                     App.ui.caseResult.querySelectorAll('.view-details-from-list').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            const plate = e.target.dataset.plate;
+                            App.ui.plateInput.value = plate;
+                            App.CaseManager.search(plate); 
+                        });
+                    });
                 },
                 renderCaseDetails(caseData, sightings, addresses, observations) {
                     const detailItem = (label, value) => `<p><strong class="font-semibold">${label}:</strong> ${value || 'N/A'}</p>`;
+                    const contractDetails = [
+                        {label: 'Cliente', value: caseData.cliente},
+                        {label: 'CPF', value: caseData.cpf},
+                        {label: 'Telefone', value: caseData.telefone},
+                        {label: 'Contrato', value: caseData.contrato},
+                        {label: 'Atraso Desde', value: caseData.atrasoDesde},
+                        {label: 'Notificação', value: caseData.notificacao},
+                    ].map(item => item.value ? detailItem(item.label, item.value) : '').join('');
+
+                    const warrantyDetails = Object.entries(caseData.garantia).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('');
+                    
                     const sightingsHtml = sightings.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(s=>`<li data-sighting-id="${s.id}" data-plate="${s.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p><i class="ph-bold ph-calendar"></i> ${new Date(s.timestamp).toLocaleString('pt-BR')}</p>${s.location?`<p><i class="ph-bold ph-map-pin"></i> Lat: ${s.location.lat.toFixed(4)}, Lon: ${s.location.lon.toFixed(4)}</p>`:''}</div><div class="flex items-center gap-4 mt-2 sm:mt-0">${s.photo?`<button title="Ver Foto" class="view-photo-btn text-orange-400"><i class="ph-fill ph-camera text-3xl"></i></button>`:`<div class="w-[36px]"></div>`}<button title="Excluir Visita" class="delete-sighting-btn text-red-500"><i class="ph-fill ph-trash text-3xl"></i></button></div></li>`).join('')||`<li class="p-3">Nenhuma visita registrada.</li>`;
                     const addressesHtml = addresses.map(a=>`<li data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-md gap-2 relative" style="background-color: var(--input-bg);"><div class="flex-grow text-sm">${App.AddressManager.format(a)}</div><div class="flex items-center gap-2 mt-2 sm:mt-0"><button title="Navegar" class="navigate-btn text-green-500 p-2"><i class="ph-fill ph-navigation-arrow text-3xl"></i></button><div class="relative options-menu-container"><button title="Mais Opções" class="toggle-options-btn p-2" style="color:var(--text-muted-color);"><i class="ph-fill ph-dots-three-vertical text-3xl"></i></button><div class="options-menu"><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="edit-address-btn w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2">Editar</button><button data-address-id="${a.id}" data-plate="${a.placaNormalizada}" class="delete-address-btn w-full text-left px-4 py-2 text-red-500 hover:bg-gray-700 flex items-center gap-2">Excluir</button></div></div></div></li>`).join('')||`<li class="p-3">Nenhum endereço cadastrado.</li>`;
                     const observationsHtml = observations.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(o=>`<li data-observation-id="${o.id}" data-plate="${o.placaNormalizada}" class="flex justify-between items-start p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p class="font-semibold" style="color: var(--text-muted-color);">${new Date(o.timestamp).toLocaleString('pt-BR')}</p><p>${o.text}</p></div><button title="Excluir Observação" class="delete-observation-btn text-red-500 flex-shrink-0"><i class="ph-fill ph-trash text-3xl"></i></button></li>`).join('')||`<li class="p-3">Nenhuma observação geral.</li>`;
@@ -508,8 +587,8 @@
 
                     App.ui.caseResult.innerHTML = `<div class="p-6 rounded-lg shadow-lg space-y-6" style="background-color: var(--card-color);">
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Status do Caso: <span class="${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${statusText}</span></h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button data-plate="${caseData.placaNormalizada}" class="toggle-status-btn w-full text-white font-bold py-2 px-4 rounded-md ${toggleStatusBtnColor}">${toggleStatusBtnText}</button><button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Exportar PDF do Caso</button><button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-md">Excluir Caso</button></div></div>
-                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${Object.entries(caseData).filter(([k])=>!['garantia','placaNormalizada','status','dataEncerramento'].includes(k)).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('')}</div></div>
-                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${Object.entries(caseData.garantia).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('')}</div></div>
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${contractDetails}</div></div>
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${warrantyDetails}</div></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Endereços</h3><button data-plate="${caseData.placaNormalizada}" class="add-address-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${addressesHtml}</ul></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Visitas e Avistamentos</h3><button data-plate="${caseData.placaNormalizada}" class="add-sighting-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Adicionar</button></div><ul class="space-y-2">${sightingsHtml}</ul></div>
@@ -553,11 +632,12 @@
                     App.ui.filtersContainer.innerHTML = statusSelect + createSelect('filter-marca','Marca',[...uq.m].sort().map(m=>`<option>${m}</option>`).join(''))+createSelect('filter-ano','Ano',[...uq.a].sort((a,b)=>b.localeCompare(a)).map(a=>`<option>${a}</option>`).join(''))+createSelect('filter-cor','Cor',[...uq.c].sort().map(c=>`<option>${c}</option>`).join(''));
                     
                     const applyFiltersCallback = () => { App.state.currentPage = 1; this.applyFilters(allCases); };
-                    document.querySelectorAll('.filter-select').forEach(sel=>sel.onchange= applyFiltersCallback);
+                    document.querySelectorAll('.filter-select, #sort-order').forEach(sel=>sel.onchange= applyFiltersCallback);
                     App.ui.filterModelo.onkeyup = applyFiltersCallback;
                     App.ui.resetFiltersBtn.onclick = () => {
                         document.querySelectorAll('.filter-select').forEach(sel => sel.value = sel.id === 'filter-status' ? 'aberto' : '');
                         App.ui.filterModelo.value = '';
+                        App.ui.sortOrder.value = 'placa';
                         applyFiltersCallback();
                     };
 
@@ -570,13 +650,22 @@
                         marca: document.getElementById('filter-marca').value,
                         ano: document.getElementById('filter-ano').value,
                         cor: document.getElementById('filter-cor').value,
-                        modelo: App.ui.filterModelo.value.toUpperCase()
+                        modelo: App.ui.filterModelo.value.toUpperCase(),
+                        sort: App.ui.sortOrder.value,
                     };
-                    const filtered = allCases.filter(c => {
+                    let filtered = allCases.filter(c => {
                         const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
                         const modelMatch = (c.garantia.modelo || '').toUpperCase().includes(filters.modelo);
                         return statusMatch && modelMatch && (!filters.marca || c.garantia.marca === filters.marca) && (!filters.ano || c.garantia.ano === filters.ano) && (!filters.cor || c.garantia.cor === filters.cor);
                     });
+                    
+                    const parseFipe = (val) => parseFloat((val || '0').replace(/[^0-9,]/g, '').replace(',', '.'));
+                    filtered.sort((a, b) => {
+                        if (filters.sort === 'fipe-asc') return parseFipe(a.garantia.valorFIPE) - parseFipe(b.garantia.valorFIPE);
+                        if (filters.sort === 'fipe-desc') return parseFipe(b.garantia.valorFIPE) - parseFipe(a.garantia.valorFIPE);
+                        return (a.garantia.placa || '').localeCompare(b.garantia.placa || '');
+                    });
+
                     this.displayFilteredCases(filtered);
                 },
                 displayFilteredCases(filteredCases) {
@@ -606,42 +695,46 @@
             // =================================================================================
             App.DataManager = {
                 parse(text) {
-                    const lines = text.toUpperCase().split('\n').map(line => line.trim()).filter(Boolean);
-                    const data = { garantia: {} };
+                    const getFieldValue = (keyword) => {
+                         const lines = text.split('\n');
+                         const keywordIndex = lines.findIndex(l => l.toUpperCase().trim().startsWith(keyword.toUpperCase()));
+                         if (keywordIndex > -1 && lines[keywordIndex + 1]) {
+                             let value = lines[keywordIndex + 1].trim();
+                             if (keyword.toUpperCase() === 'CLIENTE') {
+                                 value = value.replace(/^[\d\s-]*\s?/, '');
+                             }
+                             return value;
+                         }
+                         // Fallback for single line format like "Info. Contrato: 12345"
+                         const singleLineRegex = new RegExp(`${keyword}(\\s*|:)\\s*(.+)`, 'i');
+                         const match = text.match(singleLineRegex);
+                         if (match) return match[2].trim();
 
-                    const keywordMap = {
-                        'INFO. CONTRATO:': { key: 'contrato' },
-                        'CLIENTE:': { key: 'cliente', clean: val => val.replace(/^\d+\s*-\s*/, '').trim() },
-                        'CPF/CNPJ': { key: 'cpf' },
-                        'TELEFONE PREFERENCIAL': { key: 'telefone' },
-                        'DESDE': { key: 'atrasoDesde' },
-                        'NOTIFICAÇÃO': { key: 'notificacao' },
-                        'MARCA/MODELO': { key: 'marcaModelo', target: 'garantia' },
-                        'ANO': { key: 'ano', target: 'garantia' },
-                        'PLACA': { key: 'placa', target: 'garantia' },
-                        'RENAVAM': { key: 'renavam', target: 'garantia' },
-                        'CHASSI': { key: 'chassi', target: 'garantia' },
-                        'COR': { key: 'cor', target: 'garantia' },
-                        'VALOR': { key: 'valorFIPE', target: 'garantia' }
+                         return null;
                     };
 
-                    for (let i = 0; i < lines.length; i++) {
-                        const line = lines[i];
-                        for (const keyword in keywordMap) {
-                            if (line.startsWith(keyword) || line === keyword) {
-                                let value = line.substring(keyword.length).trim();
-                                if ((!value || value.startsWith('R$') && keyword !== 'VALOR') && (i + 1 < lines.length) && !Object.keys(keywordMap).some(k => lines[i+1].startsWith(k))) {
-                                    value = lines[i + 1].trim(); i++; 
-                                }
-                                if (value) { const m = keywordMap[keyword]; const c = m.clean ? m.clean(value) : value; (m.target === 'garantia' ? data.garantia : data)[m.key] = c; }
-                                break; 
-                            }
-                        }
-                    }
+                    const data = { garantia: {} };
+                    
+                    data.contrato = text.match(/Info\. Contrato:\s*(\S+)/i)?.[1] || null;
+                    data.cliente = getFieldValue('Cliente');
+                    data.cpf = getFieldValue('CPF/CNPJ');
+                    data.telefone = getFieldValue('Telefone Preferencial');
+                    data.atrasoDesde = text.match(/desde\s*(\d{2}\/\d{2}\/\d{4})/i)?.[1] || null;
+                    data.notificacao = getFieldValue('Notificação');
+                    
+                    data.garantia.marcaModelo = getFieldValue('Marca/Modelo');
+                    data.garantia.ano = getFieldValue('Ano');
+                    data.garantia.placa = getFieldValue('Placa');
+                    data.garantia.renavam = getFieldValue('Renavam');
+                    data.garantia.chassi = getFieldValue('Chassi');
+                    data.garantia.cor = getFieldValue('Cor');
+                    data.garantia.valorFIPE = getFieldValue('Valor');
 
                     if (data.garantia.marcaModelo) { const [marca, ...modelo] = data.garantia.marcaModelo.split('/'); data.garantia.marca = marca?.trim(); data.garantia.modelo = modelo.join('/')?.trim(); delete data.garantia.marcaModelo; }
                     data.placaNormalizada = App.PlateManager.normalize(data.garantia.placa);
                     data.status = 'aberto';
+                    
+                    if (!data.placaNormalizada || !data.contrato) return null;
                     return data;
                 },
                 _mergeCaseData(existing, newData) { const merged = JSON.parse(JSON.stringify(existing)); for (const key in newData) { if (key !== 'garantia' && newData[key]) merged[key] = newData[key]; } if (newData.garantia) { if (!merged.garantia) merged.garantia = {}; for (const key in newData.garantia) { if (newData.garantia[key]) merged.garantia[key] = newData.garantia[key]; } } return merged; },
@@ -649,14 +742,12 @@
                     const text = App.ui.settings.dataInput.value; if(!text) return App.UIManager.showToast('Caixa de texto vazia.','error');
                     App.UIManager.showLoading('Analisando...');
                     try {
-                        const parsedData = this.parse(text); if (!parsedData.placaNormalizada) throw new Error('Placa não pôde ser extraída do texto.');
-                        const allCases = await App.DBManager.getAll(STORE_CASES);
-                        const existingCase = allCases.find(c => c.contrato === parsedData.contrato);
+                        const parsedData = this.parse(text); if (!parsedData) throw new Error('Dados essenciais (placa, contrato) não encontrados no texto.');
+                        const existingCase = await App.DBManager.get(STORE_CASES, parsedData.placaNormalizada);
                         if (existingCase) {
                             const updatedCase = this._mergeCaseData(existingCase, parsedData);
-                            updatedCase.placaNormalizada = existingCase.placaNormalizada; 
                             await App.DBManager.put(STORE_CASES, updatedCase);
-                            App.UIManager.showToast(`Caso do contrato ${parsedData.contrato} atualizado!`, 'success');
+                            App.UIManager.showToast(`Caso ${parsedData.garantia.placa} atualizado!`, 'success');
                         } else {
                             await App.DBManager.put(STORE_CASES, parsedData);
                             App.UIManager.showToast(`Novo caso para placa ${parsedData.garantia.placa} salvo!`, 'success');
@@ -670,92 +761,138 @@
                         const [cases, sightings, addresses, observations, logs] = await Promise.all([App.DBManager.getAll(STORE_CASES), App.DBManager.getAll(STORE_SIGHTINGS), App.DBManager.getAll(STORE_ADDRESSES), App.DBManager.getAll(STORE_OBSERVATIONS), App.DBManager.getAll(STORE_LOGS)]);
                         const picaInstance = pica();
                         const blobToBase64 = blob => new Promise(resolve => { const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = () => resolve(reader.result); });
-                        for (const s of sightings) if (s.photo) { const img = await createImageBitmap(s.photo), canvas = document.createElement('canvas'), resized = await picaInstance.resize(img, canvas); s.photoBase64 = await blobToBase64(await picaInstance.toBlob(resized, 'image/jpeg', 0.7)); delete s.photo; }
+                        for (const s of sightings) {
+                            if (s.photo) { 
+                                const img = await createImageBitmap(s.photo); 
+                                const canvas = document.createElement('canvas'); 
+                                const resized = await picaInstance.resize(img, canvas); 
+                                s.photoBase64 = await blobToBase64(await picaInstance.toBlob(resized, 'image/jpeg', 0.7)); 
+                                delete s.photo; 
+                            }
+                        }
                         const dataBlob = new Blob([JSON.stringify({ version: 3, timestamp: new Date(), data: { cases, sightings, addresses, observations, logs } })], {type: 'application/json'});
                         const link = document.createElement('a'); link.href = URL.createObjectURL(dataBlob); link.download = `backup_localizador_${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href);
                         App.UIManager.hideLoading(); App.UIManager.showToast('Backup criado!', 'success');
-                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast('Falha no backup.', 'error'); }
+                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Falha no backup: ${e.message}`, 'error'); }
                 },
                 restore() { App.ui.settings.restoreFileInput.click(); },
                 async handleRestoreFile(file){
                     if(!file) return;
-                    
-                    const backupText = await file.text();
-                    const backupData = JSON.parse(backupText);
-                    const backupId = backupData.timestamp;
-
-                    const existingBackup = await App.DBManager.get(STORE_BACKUPS, backupId);
-                    if (existingBackup) {
-                        return App.UIManager.showToast('Este arquivo de backup já foi restaurado.', 'warning');
-                    }
-                    
                     const strategy = await App.UIManager.showRestoreStrategyModal();
                     if(!strategy) return;
                     
                     App.UIManager.showLoading('Restaurando...');
                     try {
+                        const backupText = await file.text();
+                        const backupData = JSON.parse(backupText);
+                        if (!backupData.data) throw new Error("Formato de backup inválido.");
+
                         if (strategy === 'overwrite') { 
-                            const storesToClear = [STORE_CASES, STORE_SIGHTINGS, STORE_ADDRESSES, STORE_OBSERVATIONS, STORE_LOGS];
-                            await Promise.all(storesToClear.map(s => App.DBManager.transaction(s, 'readwrite', st => st.clear())));
+                            const storesToClear = [STORE_CASES, STORE_SIGHTINGS, STORE_ADDRESSES, STORE_OBSERVATIONS, STORE_LOGS, STORE_BACKUPS];
+                            await App.DBManager.transaction(storesToClear, 'readwrite', stores => stores.forEach(s => s.clear()));
                         }
-                        for(const item of backupData.data.cases) await App.DBManager.put(STORE_CASES, item);
-                        for(const item of backupData.data.sightings){ if(item.photoBase64) item.photo = await(await fetch(item.photoBase64)).blob(); delete item.photoBase64; await App.DBManager.put(STORE_SIGHTINGS, item); }
+                        if(backupData.data.cases) for(const item of backupData.data.cases) await App.DBManager.put(STORE_CASES, item);
+                        if(backupData.data.sightings) for(const item of backupData.data.sightings){ if(item.photoBase64) item.photo = await(await fetch(item.photoBase64)).blob(); delete item.photoBase64; await App.DBManager.put(STORE_SIGHTINGS, item); }
                         if(backupData.data.addresses) for(const item of backupData.data.addresses) await App.DBManager.put(STORE_ADDRESSES, item);
                         if(backupData.data.observations) for(const item of backupData.data.observations) await App.DBManager.put(STORE_OBSERVATIONS, item);
                         if(backupData.data.logs) for(const item of backupData.data.logs) await App.DBManager.put(STORE_LOGS, item);
                         
-                        await App.DBManager.put(STORE_BACKUPS, { timestamp: backupId });
+                        await App.DBManager.put(STORE_LOGS, { message: `Backup de ${new Date(backupData.timestamp).toLocaleString()} restaurado com modo ${strategy}.`, timestamp: new Date() });
 
                         App.UIManager.hideLoading(); App.UIManager.showToast('Restauração concluída!','success');
                         if(document.getElementById('tab-list').classList.contains('active')) App.CaseManager.renderList();
-                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast('Arquivo de backup inválido.', 'error'); }
+                    } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Erro ao restaurar: ${e.message}`, 'error'); }
                 },
                 _addPdfHeader(doc, caseData) { doc.setFontSize(18); doc.text(`Relatório do Caso: ${caseData.garantia.placa}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28); return 35; },
-                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
-                _addPdfObservations(doc, observations, startY) { if (observations.length > 0) { const body = observations.map(obs => [new Date(obs.timestamp).toLocaleString('pt-BR'), obs.text]); doc.autoTable({ head: [['Data', 'Observação Geral']], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
-                _addPdfVisits(doc, sightings, startY) { if (sightings.length > 0) { const body = sightings.map(s => { let t = `Data: ${new Date(s.timestamp).toLocaleString('pt-BR')}`; if (s.location) t += `\nLocal: Lat ${s.location.lat.toFixed(4)}, Lon ${s.location.lon.toFixed(4)}`; return [t]; }); doc.autoTable({ head: ['Visitas e Avistamentos'], body, startY }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY, theme: 'grid' }); return doc.lastAutoTable.finalY + 10; } return startY; },
                 
-                async _generateSingleCasePdf(caseData) {
-                    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+                async _addPdfImages(doc, sightings, startY) {
+                    const images = sightings.filter(s => s.photo);
+                    if (images.length === 0) return startY;
+                
+                    let currentY = startY;
+                    if (currentY > 180) { 
+                        doc.addPage();
+                        currentY = 20;
+                    }
+
+                    doc.autoTable({ head: [['Visitas e Avistamentos (Imagens)']], startY: currentY });
+                    currentY = doc.lastAutoTable.finalY + 5;
+                
+                    const picaInstance = pica();
+                    const imgWidth = 45; 
+                    const imgMargin = 5;
+                    let x = 14;
+                
+                    for (const s of images) {
+                        const offscreenCanvas = document.createElement('canvas');
+                        const img = await createImageBitmap(s.photo);
+                        const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
+                        const dataUrl = resizedCanvas.toDataURL('image/jpeg', 0.7);
+                        const imgHeight = (img.height / img.width) * imgWidth;
+                
+                        if (x + imgWidth > doc.internal.pageSize.width - 14) {
+                            x = 14;
+                            currentY += imgHeight + 15;
+                        }
+                        if (currentY + imgHeight > doc.internal.pageSize.height - 20) {
+                            doc.addPage();
+                            currentY = 20;
+                            x = 14;
+                        }
+                        doc.addImage(dataUrl, 'JPEG', x, currentY, imgWidth, imgHeight);
+                        doc.setFontSize(8);
+                        doc.text(new Date(s.timestamp).toLocaleDateString('pt-BR'), x, currentY + imgHeight + 5);
+                        x += imgWidth + imgMargin;
+                    }
+                    return currentY + imgHeight + 15;
+                },
+
+                async _generateSingleCasePdf(doc, caseData) {
                     const [sightings, addresses, observations] = await Promise.all([ App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', caseData.placaNormalizada) ]);
+                    
                     let lastY = this._addPdfHeader(doc, caseData);
-                    const caseDetails = Object.entries(caseData).filter(([k]) => !['garantia', 'placaNormalizada'].includes(k)).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v || 'N/A']);
-                    lastY = this._addPdfSection(doc, 'Informações do Contrato', caseDetails, lastY);
-                    const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v || 'N/A']);
-                    lastY = this._addPdfSection(doc, 'Dados da Garantia', warrantyDetails, lastY);
-                    lastY = this._addPdfObservations(doc, observations, lastY);
-                    const addressBody = addresses.map(addr => [App.AddressManager.formatForPdf(addr)]);
-                    lastY = this._addPdfSection(doc, 'Endereços e Observações', addressBody, lastY);
-                    this._addPdfVisits(doc, sightings, lastY);
+                    const caseDetails = [
+                        ['Cliente', caseData.cliente], ['CPF', caseData.cpf], ['Telefone', caseData.telefone],
+                        ['Contrato', caseData.contrato], ['Atraso Desde', caseData.atrasoDesde],
+                    ];
+                    lastY = this._addPdfSection(doc, 'Informações do Contrato', caseDetails.filter(d => d[1]), lastY);
+                    
+                    const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v]);
+                    lastY = this._addPdfSection(doc, 'Dados da Garantia', warrantyDetails.filter(d => d[1]), lastY);
+                    
+                    lastY = await this._addPdfImages(doc, sightings, lastY);
                     return doc;
                 },
                 async exportSingleCasePDF(plate) {
                     App.UIManager.showLoading('Gerando PDF do Caso...');
                     const caseData = await App.DBManager.get(STORE_CASES, plate);
                     if (!caseData) { App.UIManager.hideLoading(); return App.UIManager.showToast('Caso não encontrado.', 'error'); }
-                    const doc = await this._generateSingleCasePdf(caseData);
+                    const doc = new window.jspdf.jsPDF();
+                    await this._generateSingleCasePdf(doc, caseData);
                     doc.save(`relatorio_${caseData.garantia.placa}.pdf`);
                     App.UIManager.hideLoading();
                 },
                 async exportAllToPDF() {
                     App.UIManager.showLoading('Gerando PDF Completo...');
-                    const { jsPDF } = window.jspdf;
-                    const mainDoc = new jsPDF();
-                    const cases = await App.DBManager.getAll(STORE_CASES);
-                    if(cases.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhum caso para exportar.', 'error'); }
-                    
-                    for (const [index, caseData] of cases.entries()) {
-                       const singleDoc = await this._generateSingleCasePdf(caseData);
-                       const pageCount = singleDoc.internal.getNumberOfPages();
-                       for (let i = 1; i <= pageCount; i++) {
-                           if (index > 0 || i > 1) mainDoc.addPage();
-                           mainDoc.setPage(mainDoc.internal.getNumberOfPages());
-                           mainDoc.addPage(singleDoc.internal.pages[i]);
-                       }
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const mainDoc = new jsPDF();
+                        const cases = await App.DBManager.getAll(STORE_CASES);
+                        if (cases.length === 0) throw new Error('Nenhum caso para exportar.');
+
+                        for (const [index, caseData] of cases.entries()) {
+                             if (index > 0) mainDoc.addPage();
+                            // Update loading message
+                            App.UIManager.showLoading(`Processando PDF ${index + 1} de ${cases.length}...`);
+                            await this._generateSingleCasePdf(mainDoc, caseData);
+                        }
+                        mainDoc.save(`relatorio_completo_${new Date().toISOString().slice(0, 10)}.pdf`);
+                    } catch(e) {
+                         App.UIManager.showToast(e.message, 'error');
+                    } finally {
+                        App.UIManager.hideLoading();
                     }
-                    mainDoc.deletePage(1); // Delete the initial blank page
-                    mainDoc.save(`relatorio_completo_${new Date().toISOString().slice(0, 10)}.pdf`);
-                    App.UIManager.hideLoading();
                 },
                  async exportListPDF() {
                     App.UIManager.showLoading('Gerando Lista em PDF...');
@@ -783,13 +920,13 @@
                     
                     const body = filteredCases.map(c => [
                         c.garantia.marca + ' ' + c.garantia.modelo,
-                        c.contrato,
                         c.garantia.placa,
-                        c.garantia.cor
+                        c.garantia.cor,
+                        c.garantia.valorFIPE || 'N/A'
                     ]);
 
                     doc.autoTable({
-                        head: [['Veículo', 'Contrato', 'Placa', 'Cor']],
+                        head: [['Veículo', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
                         startY: 35
                     });
@@ -825,15 +962,13 @@
             // EVENT LISTENERS AND APP START
             // =================================================================================
             document.addEventListener('DOMContentLoaded', async () => {
-                if (!App.Security.checkPassword()) return;
-
                 App.ThemeManager.init();
                 App.UIManager.init();
                 App.UIManager.showLoading('Inicializando...');
                 try {
                     await App.DBManager.open();
-                    await App.PermissionsManager.requestLocation();
-                    await App.PermissionsManager.requestCamera();
+                    App.CaseManager.renderList();
+                    App.PermissionsManager.requestInitialPermissions();
                     App.UIManager.hideLoading();
                     App.UIManager.showToast('Pronto para uso!', 'success');
                 } catch (e) {
@@ -845,8 +980,8 @@
                 App.ui.plateInput.onkeypress = (e) => { if (e.key === 'Enter') App.CaseManager.search(App.ui.plateInput.value); };
                 App.ui.settings.parseAndSaveBtn.onclick = () => App.DataManager.saveParsedData();
                 App.ui.settings.backupBtn.onclick = () => App.DataManager.backup();
-                App.ui.settings.restoreBtn.onclick = () => App.ui.settings.restoreFileInput.click();
-                App.ui.settings.restoreFileInput.onchange = e => App.DataManager.handleRestoreFile(e.target.files[0]);
+                App.ui.settings.restoreBtn.onclick = () => App.DataManager.restore();
+                App.ui.settings.restoreFileInput.onchange = e => { App.DataManager.handleRestoreFile(e.target.files[0]); e.target.value = ''; };
                 App.ui.settings.exportPdfBtn.onclick = () => App.DataManager.exportAllToPDF();
                 App.ui.settings.exportCsvBtn.onclick = () => App.DataManager.exportCSV();
                 App.ui.settings.exportListPdfBtn.onclick = () => App.DataManager.exportListPDF();
@@ -865,10 +1000,18 @@
                 App.ui.modals.addressCancelBtn.onclick = () => App.AddressManager.hideAddressModal();
                 App.ui.modals.observationSaveBtn.onclick = () => App.ObservationManager.saveObservation();
                 App.ui.modals.observationCancelBtn.onclick = () => App.ObservationManager.hideObservationModal();
-                App.ui.modals.takePictureBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.UIManager.showCamera(); };
-                App.ui.modals.chooseGalleryBtn.onclick = () => { App.UIManager.hideImageSourceModal(); App.ui.imageUploadInput.click(); };
+                App.ui.modals.takePictureBtn.onclick = async () => { 
+                    App.UIManager.hideImageSourceModal(); 
+                    if (await App.PermissionsManager.requestCamera()) {
+                        App.UIManager.showCamera(); 
+                    }
+                };
+                App.ui.modals.chooseGalleryBtn.onclick = () => { 
+                    App.UIManager.hideImageSourceModal(); 
+                    App.ui.imageUploadInput.click(); 
+                };
                 App.ui.modals.imageSourceCancelBtn.onclick = () => App.UIManager.hideImageSourceModal();
-                App.ui.imageUploadInput.onchange = e => { if(e.target.files[0]) App.UIManager._saveSighting(e.target.files[0]); };
+                App.ui.imageUploadInput.onchange = e => { if(e.target.files[0]) { App.UIManager._saveSighting(e.target.files[0]); e.target.value = ''; } };
             });
         })();
     </script>
