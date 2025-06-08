@@ -434,7 +434,7 @@
                     const t = (await this.open()).transaction(stores, type);
                     return new Promise((res, rej) => { t.oncomplete = res; t.onerror = () => rej(t.error); cb(Array.isArray(stores) ? stores.map(s => t.objectStore(s)) : t.objectStore(stores)); });
                 },
-                get: (store, key) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.get(key).onsuccess = e => r(e.target.result))),
+                get: (store, key) => new Promise(r => { if(!key) { r(null); return; } App.DBManager.transaction(store, 'readonly', s => s.get(key).onsuccess = e => r(e.target.result))}),
                 getAll: (store) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.getAll().onsuccess = e => r(e.target.result))),
                 getFromIndex: (store, idx, q) => new Promise(r => App.DBManager.transaction(store, 'readonly', s => s.index(idx).getAll(q).onsuccess = e => r(e.target.result))),
                 put: (store, item) => App.DBManager.transaction(store, 'readwrite', s => s.put(item)),
@@ -455,7 +455,7 @@
                             else if (btn.classList.contains('add-sighting-btn')) this.showImageSourceModal(btn.dataset.plate);
                             else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
                             else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
-                            else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate); // Event for edit button
+                            else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate);
                             else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
                             else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
                             else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
@@ -695,6 +695,60 @@
                 formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Morada: ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
                 async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
                 async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Morada','Deseja apagar esta morada?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Morada excluída.','success');App.CaseManager.search(p)}}
+            };
+            
+            // =================================================================================
+            // ADDRESS PARSER
+            // =================================================================================
+            App.AddressParser = {
+                parseBlock(text) {
+                    const addressBlocks = text.split(/(?=Residencial|Comercial|Outros)/i);
+                    const parsedAddresses = [];
+
+                    for (const block of addressBlocks) {
+                        if (block.trim() === '') continue;
+                        
+                        let formattedBlock = block.replace(/([a-z])([A-Z])/g, '$1 $2');
+                        formattedBlock = formattedBlock.replace(/UFCEP/g, 'UF CEP');
+
+                        const addr = this.parseSingle(formattedBlock);
+                        if(addr.logradouro || addr.cidade || addr.cep) {
+                             parsedAddresses.push(addr);
+                        }
+                    }
+                    return parsedAddresses;
+                },
+
+                parseSingle(text) {
+                    const R = (txt, regex) => { 
+                        const match = txt.match(regex); 
+                        return match ? match[1].trim() : null; 
+                    };
+                    text = ` ${text.replace(/[.,]/g, ' ')} `;
+                    const addr = {};
+
+                    addr.tipo = R(text, /(Residencial|Comercial|Outros)/i);
+                    addr.cep = R(text, /CEP\s?(\d{8}|\d{5}-\d{3})/i);
+                    addr.estado = R(text, /\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
+
+                    const cityMatch = text.match(/\b(Cuiaba|Sinop|Alta Floresta)\b/i);
+                    addr.cidade = cityMatch ? cityMatch[0] : null;
+
+                    const numMatch = text.match(/(?:Numero|Num|N[º°]?)\s*(\d+)/i) || text.match(/\b\d+\b/);
+                    addr.numero = numMatch ? numMatch[0].replace(/\D/g, '') : null;
+                    
+                    const bairroMatch = text.match(/(?:Bairro|Setor|St|Jd|Jardim)\s*([\w\s]+?)(?=,|$|\d{5}-\d{3})/i);
+                    addr.bairro = bairroMatch ? bairroMatch[1].trim() : null;
+
+                    addr.logradouro = text.replace(/(Residencial|Comercial|Outros|Rua|Av|Avenida|Est|Estrada|Numero|Num|N[º°]?|CEP)/gi, '')
+                                        .replace(addr.cep || '', '')
+                                        .replace(addr.numero || '', '')
+                                        .replace(addr.bairro || '', '')
+                                        .replace(addr.cidade || '', '')
+                                        .replace(addr.estado || '', '')
+                                        .replace(/\s+/g, ' ').trim();
+                    return addr;
+                }
             };
             
             // =================================================================================
@@ -983,8 +1037,8 @@
             // =================================================================================
             App.DataManager = {
                 parse(text) {
-                    const getFieldValue = (keyword, data = text) => {
-                         const lines = data.split('\n');
+                    const getFieldValue = (keyword) => {
+                         const lines = text.split('\n');
                          const keywordIndex = lines.findIndex(l => l.toUpperCase().trim().startsWith(keyword.toUpperCase()));
                          if (keywordIndex > -1 && lines[keywordIndex + 1]) {
                              let value = lines[keywordIndex + 1].trim();
@@ -1105,7 +1159,22 @@
                         if(document.getElementById('tab-list').classList.contains('active')) App.CaseManager.renderList();
                     } catch (e) { App.UIManager.hideLoading(); App.UIManager.showToast(`Erro ao restaurar: ${e.message}`, 'error'); }
                 },
-                _addPdfHeader(doc, caseData) { doc.setFontSize(18); doc.text(`Relatório do Caso: ${caseData.garantia.placa}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28); return 35; },
+                _addPdfHeader(doc, titleText) {
+                    doc.setFontSize(18);
+                    const titleWidth = doc.getStringUnitWidth(titleText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                    const docWidth = doc.internal.pageSize.getWidth();
+                    doc.text(titleText, (docWidth - titleWidth) / 2, 22);
+                },
+                _addPdfFooter(doc, filters) {
+                    const pageCount = doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    for(var i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        const footerText = `Lista de Casos (${filters.status.toUpperCase()}) - Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        doc.text(footerText, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+                    }
+                },
                 _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY, theme: 'grid' }); return doc.lastAutoTable.finalY + 10; } return startY; },
                 
                 async _addPdfImages(doc, sightings, startY) {
@@ -1157,7 +1226,7 @@
                 async _generateSingleCasePdf(doc, caseData) {
                     const [sightings, addresses, observations] = await Promise.all([ App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', caseData.placaNormalizada) ]);
                     
-                    let lastY = this._addPdfHeader(doc, caseData);
+                    let lastY = this._addPdfHeader(doc, `Relatório do Caso: ${caseData.garantia.placa}`);
                     const caseDetails = [
                         ['Cliente', caseData.cliente], ['CPF', caseData.cpf], ['Telefone', caseData.telefone],
                         ['Contrato', caseData.contrato], ['Atraso Desde', caseData.atrasoDesde],
@@ -1219,27 +1288,39 @@
                     };
                     const filteredCases = allCases.filter(c => {
                         const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
-                        const modelMatch = (c.garantia.modelo || '').toUpperCase().includes(filters.modelo);
+                        const modelMatch = (c.garantia?.modelo || '').toUpperCase().includes(filters.modelo);
                         return statusMatch && modelMatch && (!filters.marca || c.garantia.marca === filters.marca) && (!filters.ano || c.garantia.ano === filters.ano) && (!filters.cor || c.garantia.cor === filters.cor);
                     });
 
                     if(filteredCases.length === 0) { App.UIManager.hideLoading(); return App.UIManager.showToast('Nenhum caso para exportar.', 'error'); }
-
-                    doc.setFontSize(18); doc.text(`Lista de Casos (${filters.status.toUpperCase()})`, 14, 22);
-                    doc.setFontSize(11); doc.setTextColor(100); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
                     
-                    const body = filteredCases.map(c => [
-                        c.garantia.marca + ' ' + c.garantia.modelo,
+                    const body = filteredCases.map(c => ([
+                        c.contrato || 'N/A',
+                        `${c.garantia.marca} ${c.garantia.modelo}`,
                         c.garantia.placa,
                         c.garantia.cor,
-                        c.garantia.valorFIPE || 'N/A'
-                    ]);
+                        c.garantia.valorFIPE?.match(/R\$\s*[\d,.]+/)?.[0] || 'N/A'
+                    ]));
 
                     doc.autoTable({
-                        head: [['Veículo', 'Matrícula', 'Cor', 'Valor FIPE']],
+                        head: [['Contrato', 'Veículo', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
-                        startY: 35
+                        didDrawPage: (data) => {
+                            this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
+                        },
+                        margin: { top: 35 },
+                        styles: { fontSize: 10, cellPadding: 2, overflow: 'ellipsize' },
+                        headStyles: { fontSize: 11, fillColor: [41, 128, 185], halign: 'center' },
+                        columnStyles: {
+                           0: { halign: 'center', cellWidth: 35 }, 
+                           1: { halign: 'left', cellWidth: 'auto' }, 
+                           2: { halign: 'center', cellWidth: 25 }, 
+                           3: { halign: 'center', cellWidth: 20 },
+                           4: { halign: 'left', cellWidth: 30 }, 
+                        }
                     });
+                    
+                    this._addPdfFooter(doc, filters);
 
                     doc.save(`lista_casos_${new Date().toISOString().slice(0, 10)}.pdf`);
                     App.UIManager.hideLoading();
