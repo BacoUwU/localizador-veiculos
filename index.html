@@ -240,6 +240,39 @@
             </div>
         </div>
     </div>
+    <div id="editCaseModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
+        <div class="p-6 rounded-lg shadow-xl max-w-2xl w-full flex flex-col max-h-[90vh]" style="background-color: var(--card-color);">
+            <h3 class="text-xl font-bold mb-4 flex-shrink-0">Editar Caso</h3>
+            <form id="editCaseForm" class="space-y-4 overflow-y-auto pr-2">
+                <!-- Contract Info -->
+                <h4 class="text-lg font-semibold" style="color:var(--primary-color);">Informações do Contrato</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label for="edit-cliente" class="block text-sm font-medium">Cliente</label><input type="text" id="edit-cliente" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-cpf" class="block text-sm font-medium">CPF</label><input type="text" id="edit-cpf" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-telefone" class="block text-sm font-medium">Telefone</label><input type="text" id="edit-telefone" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-contrato" class="block text-sm font-medium">Contrato</label><input type="text" id="edit-contrato" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);" readonly></div>
+                    <div><label for="edit-atrasoDesde" class="block text-sm font-medium">Atraso Desde</label><input type="text" id="edit-atrasoDesde" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-notificacao" class="block text-sm font-medium">Notificação</label><input type="text" id="edit-notificacao" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                </div>
+                 <!-- Warranty Info -->
+                <h4 class="text-lg font-semibold pt-4" style="color:var(--primary-color);">Dados da Garantia</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label for="edit-placa" class="block text-sm font-medium">Matrícula</label><input type="text" id="edit-placa" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);" readonly></div>
+                    <div><label for="edit-marca" class="block text-sm font-medium">Marca</label><input type="text" id="edit-marca" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-modelo" class="block text-sm font-medium">Modelo</label><input type="text" id="edit-modelo" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-ano" class="block text-sm font-medium">Ano</label><input type="text" id="edit-ano" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-cor" class="block text-sm font-medium">Cor</label><input type="text" id="edit-cor" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="edit-renavam" class="block text-sm font-medium">Renavam</label><input type="text" id="edit-renavam" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div class="sm:col-span-2"><label for="edit-chassi" class="block text-sm font-medium">Chassi</label><input type="text" id="edit-chassi" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div class="sm:col-span-2"><label for="edit-valorFIPE" class="block text-sm font-medium">Valor FIPE</label><input type="text" id="edit-valorFIPE" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                </div>
+            </form>
+            <div class="flex justify-end gap-4 mt-6 flex-shrink-0">
+                <button id="editCaseCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
+                <button id="editCaseSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar Alterações</button>
+            </div>
+        </div>
+    </div>
     <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 id="addressModalTitle" class="text-xl font-bold mb-4">Adicionar Morada</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto da morada:</label><textarea id="addressTextInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Rua Tal, 123, Bairro..."></textarea></div><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div><div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div><button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button></div><div class="flex justify-end gap-4 mt-6"><button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="addressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite a sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="imageSourceModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Imagem</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha a origem da imagem para a visita.</p><div class="space-y-4"><button id="takePictureBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Tirar Foto</button><button id="chooseGalleryBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-image"></i> Escolher da Galeria</button></div><div class="flex justify-end mt-6"><button id="imageSourceCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button></div></div></div>
@@ -300,6 +333,7 @@
                     photoView: document.getElementById('photoViewModal'), photoViewImage: document.getElementById('photoViewImage'), closePhotoViewBtn: document.getElementById('closePhotoViewBtn'),
                     confirmation: document.getElementById('confirmationModal'), confirmationTitle: document.getElementById('confirmationTitle'), confirmationMessage: document.getElementById('confirmationMessage'), confirmOkBtn: document.getElementById('confirmOkBtn'), confirmCancelBtn: document.getElementById('confirmCancelBtn'),
                     resetConfirm: document.getElementById('resetConfirmModal'), resetConfirmInput: document.getElementById('resetConfirmInput'), resetConfirmOkBtn: document.getElementById('resetConfirmOkBtn'), resetCancelBtn: document.getElementById('resetCancelBtn'),
+                    editCase: document.getElementById('editCaseModal'), editCaseForm: document.getElementById('editCaseForm'), editCaseSaveBtn: document.getElementById('editCaseSaveBtn'), editCaseCancelBtn: document.getElementById('editCaseCancelBtn'),
                     address: document.getElementById('addressModal'), addressModalTitle: document.getElementById('addressModalTitle'), addressTextInput: document.getElementById('addressTextInput'), addressObsInput: document.getElementById('addressObsInput'), useCurrentLocationBtn: document.getElementById('useCurrentLocationBtn'), addressSaveBtn: document.getElementById('addressSaveBtn'), addressCancelBtn: document.getElementById('addressCancelBtn'),
                     observation: document.getElementById('observationModal'), observationTextInput: document.getElementById('observationTextInput'), observationSaveBtn: document.getElementById('observationSaveBtn'), observationCancelBtn: document.getElementById('observationCancelBtn'),
                     restoreStrategy: document.getElementById('restoreStrategyModal'), restoreConfirmBtn: document.getElementById('restoreConfirmBtn'), restoreCancelBtn: document.getElementById('restoreCancelBtn'),
@@ -382,6 +416,7 @@
                         else if (btn.classList.contains('toggle-status-btn')) App.CaseManager.toggleCaseStatus(btn.dataset.plate);
                         else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
                         else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
+                        else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate); // Event for edit button
                         else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
                         else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
                         else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
@@ -411,11 +446,10 @@
                     if (!isShowing) menu.classList.add('show');
                 },
                 switchTab(tabId) {
-    App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-    App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`)); // ✅ Fechamento correto
-    if (tabId === 'list') App.CaseManager.renderList();
-},
-
+                    App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+                    App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`));
+                    if (tabId === 'list') App.CaseManager.renderList();
+                },
                 showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
                 hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
                 showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
@@ -428,29 +462,34 @@
                 showImageSourceModal(plate) { App.state.currentPlate = plate; App.ui.modals.imageSource.classList.remove('hidden'); },
                 hideImageSourceModal() { App.ui.modals.imageSource.classList.add('hidden'); },
                 async _saveSighting(imageBlob) {
-                    if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
                     this.showLoading('Redimensionando e guardando...');
-                    const picaInstance = pica();
-                    const offscreenCanvas = document.createElement('canvas');
-                    const img = await createImageBitmap(imageBlob);
+                    try {
+                        if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
+                        const picaInstance = pica();
+                        const offscreenCanvas = document.createElement('canvas');
+                        const img = await createImageBitmap(imageBlob);
 
-                    let targetWidth = 640; let targetHeight = 480;
-                    if (img.width > img.height) { targetHeight = (img.height / img.width) * targetWidth; } else { targetWidth = (img.width / img.height) * targetHeight; }
-                    offscreenCanvas.width = targetWidth; offscreenCanvas.height = targetHeight;
-                    
-                    const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
-                    const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
-                    
-                    const sightingData = { 
-                        placaNormalizada: App.state.currentPlate, 
-                        timestamp: new Date(), 
-                        location: await App.PermissionsManager.getLocation(), 
-                        photo: resizedBlob 
-                    };
-                    await App.DBManager.put(STORE_SIGHTINGS, sightingData);
-                    this.hideLoading();
-                    this.showToast('Visita registada!', 'success');
-                    if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
+                        let targetWidth = 640; let targetHeight = 480;
+                        if (img.width > img.height) { targetHeight = (img.height / img.width) * targetWidth; } else { targetWidth = (img.width / img.height) * targetHeight; }
+                        offscreenCanvas.width = targetWidth; offscreenCanvas.height = targetHeight;
+                        
+                        const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
+                        const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
+                        
+                        const sightingData = { 
+                            placaNormalizada: App.state.currentPlate, 
+                            timestamp: new Date(), 
+                            location: await App.PermissionsManager.getLocation(), 
+                            photo: resizedBlob 
+                        };
+                        await App.DBManager.put(STORE_SIGHTINGS, sightingData);
+                        this.showToast('Visita registada!', 'success');
+                        if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
+                    } catch(e) {
+                        this.showToast(`Erro ao guardar visita: ${e.message}`, 'error');
+                    } finally {
+                        this.hideLoading();
+                    }
                 },
                 showRestoreStrategyModal() {
                     return new Promise(resolve => {
@@ -667,7 +706,7 @@
                     const toggleStatusBtnColor = caseStatus === 'aberto' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700';
 
                     App.ui.caseResult.innerHTML = `<div class="p-6 rounded-lg shadow-lg space-y-6" style="background-color: var(--card-color);">
-                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Status do Caso: <span class="${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${statusText}</span></h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button data-plate="${caseData.placaNormalizada}" class="toggle-status-btn w-full text-white font-bold py-2 px-4 rounded-md ${toggleStatusBtnColor}">${toggleStatusBtnText}</button><button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Exportar PDF do Caso</button><button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-md">Excluir Caso</button></div></div>
+                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Status do Caso: <span class="${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${statusText}</span></h3><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><button data-plate="${caseData.placaNormalizada}" class="edit-case-btn w-full text-white font-bold py-2 px-4 rounded-md bg-green-600 hover:bg-green-700">Editar Caso</button><button data-plate="${caseData.placaNormalizada}" class="toggle-status-btn w-full text-white font-bold py-2 px-4 rounded-md ${toggleStatusBtnColor}">${toggleStatusBtnText}</button><button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Exportar PDF</button><button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-md">Excluir Caso</button></div></div>
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${contractDetails}</div></div>
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${warrantyDetails}</div></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
@@ -675,6 +714,67 @@
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Visitas e Avistamentos</h3><button data-plate="${caseData.placaNormalizada}" class="add-sighting-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Adicionar</button></div><ul class="space-y-2">${sightingsHtml}</ul></div>
                     </div>`;
                     App.ui.caseResult.classList.remove('hidden');
+                },
+                async showEditModal(plate) {
+                    const caseData = await App.DBManager.get(STORE_CASES, plate);
+                    if (!caseData) return App.UIManager.showToast('Caso não encontrado para edição.', 'error');
+                    
+                    App.state.currentPlate = plate;
+                    const form = App.ui.modals.editCaseForm;
+                    form.querySelector('#edit-cliente').value = caseData.cliente || '';
+                    form.querySelector('#edit-cpf').value = caseData.cpf || '';
+                    form.querySelector('#edit-telefone').value = caseData.telefone || '';
+                    form.querySelector('#edit-contrato').value = caseData.contrato || '';
+                    form.querySelector('#edit-atrasoDesde').value = caseData.atrasoDesde || '';
+                    form.querySelector('#edit-notificacao').value = caseData.notificacao || '';
+                    
+                    if (caseData.garantia) {
+                        form.querySelector('#edit-placa').value = caseData.garantia.placa || '';
+                        form.querySelector('#edit-marca').value = caseData.garantia.marca || '';
+                        form.querySelector('#edit-modelo').value = caseData.garantia.modelo || '';
+                        form.querySelector('#edit-ano').value = caseData.garantia.ano || '';
+                        form.querySelector('#edit-cor').value = caseData.garantia.cor || '';
+                        form.querySelector('#edit-renavam').value = caseData.garantia.renavam || '';
+                        form.querySelector('#edit-chassi').value = caseData.garantia.chassi || '';
+                        form.querySelector('#edit-valorFIPE').value = caseData.garantia.valorFIPE || '';
+                    }
+                    
+                    App.ui.modals.editCase.classList.remove('hidden');
+                },
+                hideEditModal() {
+                    App.ui.modals.editCase.classList.add('hidden');
+                },
+                async saveCaseChanges() {
+                    const plate = App.state.currentPlate;
+                    if (!plate) return;
+
+                    const existingData = await App.DBManager.get(STORE_CASES, plate);
+                    if (!existingData) return App.UIManager.showToast('Erro ao guardar: caso não encontrado.', 'error');
+
+                    const form = App.ui.modals.editCaseForm;
+                    const updatedData = {
+                        ...existingData, // Preserve all existing data first
+                        cliente: form.querySelector('#edit-cliente').value,
+                        cpf: form.querySelector('#edit-cpf').value,
+                        telefone: form.querySelector('#edit-telefone').value,
+                        atrasoDesde: form.querySelector('#edit-atrasoDesde').value,
+                        notificacao: form.querySelector('#edit-notificacao').value,
+                        garantia: {
+                            ...existingData.garantia,
+                            marca: form.querySelector('#edit-marca').value,
+                            modelo: form.querySelector('#edit-modelo').value,
+                            ano: form.querySelector('#edit-ano').value,
+                            cor: form.querySelector('#edit-cor').value,
+                            renavam: form.querySelector('#edit-renavam').value,
+                            chassi: form.querySelector('#edit-chassi').value,
+                            valorFIPE: form.querySelector('#edit-valorFIPE').value
+                        }
+                    };
+
+                    await App.DBManager.put(STORE_CASES, updatedData);
+                    App.UIManager.showToast('Caso atualizado com sucesso!', 'success');
+                    this.hideEditModal();
+                    this.search(existingData.garantia.placa); // Refresh the view
                 },
                 async deleteSighting(id, p) { if (await App.UIManager.showConfirmation('Excluir Visita', 'Deseja excluir este registo?')) { await App.DBManager.delete(STORE_SIGHTINGS, id); App.UIManager.showToast('Visita excluída.', 'success'); this.search(p); } },
                 async toggleCaseStatus(plate) {
@@ -1116,6 +1216,8 @@
                 App.ui.modals.capturePhotoBtn.onclick = () => App.UIManager.capturePhoto();
                 App.ui.loadMoreBtn.onclick = () => App.CaseManager.loadMore();
                 App.ui.modals.closePhotoViewBtn.onclick = () => App.UIManager.hidePhoto();
+                App.ui.modals.editCaseSaveBtn.onclick = () => App.CaseManager.saveCaseChanges();
+                App.ui.modals.editCaseCancelBtn.onclick = () => App.CaseManager.hideEditModal();
                 App.ui.modals.addressSaveBtn.onclick = () => App.AddressManager.save();
                 App.ui.modals.useCurrentLocationBtn.onclick = () => App.AddressManager.saveFromGPS();
                 App.ui.modals.addressCancelBtn.onclick = () => App.AddressManager.hideAddressModal();
