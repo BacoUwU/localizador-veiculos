@@ -209,6 +209,14 @@
                     <textarea id="dataInput" rows="10" class="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole o texto completo do caso aqui..."></textarea>
                     <button id="parseAndSaveBtn" class="mt-4 w-full text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-text-aa"></i> Analisar e Guardar</button>
                 </div>
+                <!-- Zona de Perigo -->
+                <div class="p-6 rounded-lg shadow-lg border border-red-500/50" style="background-color: var(--card-color);">
+                    <h2 class="text-xl font-bold mb-2 flex items-center text-red-400">
+                        Zona de Perigo
+                    </h2>
+                    <p class="mb-4" style="color: var(--text-muted-color);">Ações nesta secção são permanentes e não podem ser desfeitas.</p>
+                    <button id="resetAppBtn" class="w-full bg-red-800 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-warning"></i> Limpar Tudo</button>
+                </div>
             </div>
         </main>
     </div>
@@ -220,6 +228,18 @@
     <div id="cameraModal" class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"><video id="cameraPreview" class="w-full h-full object-cover" autoplay playsinline></video><button id="capturePhotoBtn" class="absolute bottom-10 bg-white rounded-full w-20 h-20 p-1 border-4 focus:outline-none" style="border-color: var(--text-muted-color);"></button><button id="closeCameraBtn" class="absolute top-5 right-5 text-white bg-black bg-opacity-50 rounded-full p-2"><i class="ph-fill ph-x-circle text-4xl"></i></button></div>
     <div id="photoViewModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col relative" style="background-color: var(--card-color);"><button id="closePhotoViewBtn" class="absolute -top-3 -right-3 text-white bg-red-600 rounded-full p-1 z-10"><i class="ph-fill ph-x-circle text-3xl"></i></button><img id="photoViewImage" src="" alt="Foto do Avistamento" class="w-full h-full object-contain rounded-lg"></div></div>
     <div id="confirmationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 id="confirmationTitle" class="text-xl font-bold mb-4">Confirmar Ação</h3><p id="confirmationMessage" class="mb-6" style="color: var(--text-muted-color);">Tem a certeza?</p><div class="flex justify-end gap-4"><button id="confirmCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="confirmOkBtn" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Confirmar</button></div></div></div>
+    <div id="resetConfirmModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
+        <div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);">
+            <h3 class="text-xl font-bold mb-4 text-red-400">Apagar Todos os Dados</h3>
+            <p class="mb-4" style="color: var(--text-muted-color);">Esta ação é irreversível. Todos os casos, visitas e configurações serão apagados permanentemente.</p>
+            <p class="mb-4" style="color: var(--text-muted-color);">Para confirmar, digite <strong>CONFIRMO</strong> no campo abaixo.</p>
+            <input type="text" id="resetConfirmInput" class="w-full border rounded-md px-4 py-2 focus:outline-none" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite CONFIRMO">
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="resetCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
+                <button id="resetConfirmOkBtn" class="px-6 py-2 bg-red-800 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>Confirmar e Apagar Tudo</button>
+            </div>
+        </div>
+    </div>
     <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 id="addressModalTitle" class="text-xl font-bold mb-4">Adicionar Morada</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto da morada:</label><textarea id="addressTextInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Rua Tal, 123, Bairro..."></textarea></div><div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div><div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div><button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button></div><div class="flex justify-end gap-4 mt-6"><button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="addressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite a sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="imageSourceModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Imagem</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha a origem da imagem para a visita.</p><div class="space-y-4"><button id="takePictureBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Tirar Foto</button><button id="chooseGalleryBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-image"></i> Escolher da Galeria</button></div><div class="flex justify-end mt-6"><button id="imageSourceCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button></div></div></div>
@@ -270,6 +290,7 @@
                     exportPdfBtn: document.getElementById('exportPdfBtn'),
                     exportCsvBtn: document.getElementById('exportCsvBtn'),
                     exportListPdfBtn: document.getElementById('exportListPdfBtn'),
+                    resetAppBtn: document.getElementById('resetAppBtn'),
                 },
                 modals: {
                     loading: document.getElementById('loadingModal'), loadingText: document.getElementById('loadingText'),
@@ -278,6 +299,7 @@
                     camera: document.getElementById('cameraModal'), cameraPreview: document.getElementById('cameraPreview'), capturePhotoBtn: document.getElementById('capturePhotoBtn'), closeCameraBtn: document.getElementById('closeCameraBtn'),
                     photoView: document.getElementById('photoViewModal'), photoViewImage: document.getElementById('photoViewImage'), closePhotoViewBtn: document.getElementById('closePhotoViewBtn'),
                     confirmation: document.getElementById('confirmationModal'), confirmationTitle: document.getElementById('confirmationTitle'), confirmationMessage: document.getElementById('confirmationMessage'), confirmOkBtn: document.getElementById('confirmOkBtn'), confirmCancelBtn: document.getElementById('confirmCancelBtn'),
+                    resetConfirm: document.getElementById('resetConfirmModal'), resetConfirmInput: document.getElementById('resetConfirmInput'), resetConfirmOkBtn: document.getElementById('resetConfirmOkBtn'), resetCancelBtn: document.getElementById('resetCancelBtn'),
                     address: document.getElementById('addressModal'), addressModalTitle: document.getElementById('addressModalTitle'), addressTextInput: document.getElementById('addressTextInput'), addressObsInput: document.getElementById('addressObsInput'), useCurrentLocationBtn: document.getElementById('useCurrentLocationBtn'), addressSaveBtn: document.getElementById('addressSaveBtn'), addressCancelBtn: document.getElementById('addressCancelBtn'),
                     observation: document.getElementById('observationModal'), observationTextInput: document.getElementById('observationTextInput'), observationSaveBtn: document.getElementById('observationSaveBtn'), observationCancelBtn: document.getElementById('observationCancelBtn'),
                     restoreStrategy: document.getElementById('restoreStrategyModal'), restoreConfirmBtn: document.getElementById('restoreConfirmBtn'), restoreCancelBtn: document.getElementById('restoreCancelBtn'),
@@ -683,7 +705,7 @@
                     App.UIManager.showLoading('A carregar...');
                     const allCases = await App.DBManager.getAll(STORE_CASES);
                     const uq = {m:new Set(), a:new Set(), c:new Set()};
-                    allCases.forEach(c=>{if(c.garantia.marca)uq.m.add(c.garantia.marca);if(c.garantia.ano)uq.a.add(c.garantia.ano);if(c.garantia.cor)uq.c.add(c.garantia.cor)});
+                    allCases.forEach(c=>{if(c.garantia?.marca)uq.m.add(c.garantia.marca);if(c.garantia?.ano)uq.a.add(c.garantia.ano);if(c.garantia?.cor)uq.c.add(c.garantia.cor)});
                     
                     const createSelect = (id, lbl, opts) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts}</select></div>`;
                     const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" selected>Abertos</option><option value="encerrado">Encerrados</option><option value="todos">Todos</option></select></div>`;
@@ -1050,6 +1072,31 @@
                     App.UIManager.showToast(`Falha na inicialização: ${e.message}`, 'error');
                 }
                 
+                App.ui.settings.resetAppBtn.onclick = () => {
+                    const modal = App.ui.modals.resetConfirm;
+                    const input = App.ui.modals.resetConfirmInput;
+                    const okBtn = App.ui.modals.resetConfirmOkBtn;
+                    
+                    input.value = '';
+                    okBtn.disabled = true;
+                    modal.classList.remove('hidden');
+
+                    input.oninput = () => {
+                        okBtn.disabled = input.value.toUpperCase() !== 'CONFIRMO';
+                    };
+
+                    App.ui.modals.resetCancelBtn.onclick = () => modal.classList.add('hidden');
+                    okBtn.onclick = async () => {
+                        modal.classList.add('hidden');
+                        App.UIManager.showLoading('A limpar todos os dados...');
+                        const stores = [STORE_CASES, STORE_SIGHTINGS, STORE_ADDRESSES, STORE_OBSERVATIONS, STORE_LOGS, STORE_BACKUPS];
+                        await App.DBManager.transaction(stores, 'readwrite', (s) => s.forEach(store => store.clear()));
+                        localStorage.clear();
+                        App.UIManager.showToast('Aplicação redefinida. A recarregar...', 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    };
+                };
+
                 App.ui.searchPlateBtn.onclick = () => App.CaseManager.search(App.ui.plateInput.value);
                 App.ui.plateInput.onkeypress = (e) => { if (e.key === 'Enter') App.CaseManager.search(App.ui.plateInput.value); };
                 App.ui.settings.parseAndSaveBtn.onclick = () => App.DataManager.saveParsedData();
