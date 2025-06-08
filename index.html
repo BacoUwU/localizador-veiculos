@@ -511,17 +511,7 @@
                 async _saveSighting(imageBlob) {
                     this.showLoading('Redimensionando e guardando...');
                     try {
-                        // FIX: Request location permission only when needed for GPS addresses, not for all sightings
-                        const sightingData = { 
-                            placaNormalizada: App.state.currentPlate, 
-                            timestamp: new Date(), 
-                            photo: imageBlob // save original blob first
-                        };
-                        
-                        // Perform resizing after initial save to improve user experience
-                        this.hideLoading();
-                        this.showToast('Visita registada! A otimizar imagem...', 'info');
-
+                        if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
                         const picaInstance = pica();
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(imageBlob);
@@ -533,13 +523,19 @@
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                         const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
                         
-                        sightingData.photo = resizedBlob;
+                        const sightingData = { 
+                            placaNormalizada: App.state.currentPlate, 
+                            timestamp: new Date(), 
+                            location: await App.PermissionsManager.getLocation(), 
+                            photo: resizedBlob 
+                        };
                         await App.DBManager.put(STORE_SIGHTINGS, sightingData);
-                        
+                        this.showToast('Visita registada!', 'success');
                         if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
                     } catch(e) {
                         this.showToast(`Erro ao guardar visita: ${e.message}`, 'error');
-                         this.hideLoading();
+                    } finally {
+                        this.hideLoading();
                     }
                 },
                 showRestoreStrategyModal() {
@@ -1172,6 +1168,7 @@
                 _addPdfFooter(doc, footerText) {
                     const pageCount = doc.internal.getNumberOfPages();
                     doc.setFontSize(8);
+                    doc.setTextColor(100);
                     for(var i = 1; i <= pageCount; i++) {
                         doc.setPage(i);
                         const pageWidth = doc.internal.pageSize.getWidth();
@@ -1306,15 +1303,13 @@
                         c.garantia.valorFIPE?.match(/R\$\s*[\d,.]+/)?.[0] || 'N/A'
                     ]));
                     
-                    const addPageContent = (data) => {
-                        this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
-                        this._addPdfFooter(doc, filters);
-                    };
-
                     doc.autoTable({
                         head: [['Contrato', 'Veículo', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
-                        didDrawPage: addPageContent,
+                        didDrawPage: (data) => {
+                            this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
+                            this._addPdfFooter(doc, `Página ${data.pageNumber} de ${doc.internal.getNumberOfPages()}`);
+                        },
                         margin: { top: 35 },
                         styles: { fontSize: 10, cellPadding: 2, overflow: 'ellipsize' },
                         headStyles: { fontSize: 11, fillColor: [41, 128, 185], halign: 'center' },
