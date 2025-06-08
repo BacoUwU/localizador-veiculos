@@ -128,15 +128,18 @@
             <div id="tab-search" class="tab-content active space-y-6">
                 <div class="p-6 rounded-lg shadow-lg" style="background-color: var(--card-color);">
                     <label for="plateInput" class="text-xl font-bold mb-4 flex items-center">
-                        Consultar Matrícula
+                        Consultar Placa
                         <span class="help-icon-wrapper">
                             <i class="ph-bold ph-question help-icon"></i>
-                            <span class="help-tooltip">Digite a matrícula completa ou parcial para encontrar casos.</span>
+                            <span class="help-tooltip">Digite a placa completa ou parcial para encontrar casos.</span>
                         </span>
                     </label>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="plateInput" placeholder="Digite a matrícula do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
-                        <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Procurar</button>
+                    <div class="relative">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="plateInput" placeholder="Digite a placa do veículo" class="w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2" style="background-color: var(--input-bg); border-color: var(--border-color); focus-ring-color: var(--primary-color);">
+                            <button id="searchPlateBtn" class="text-white font-bold py-3 px-8 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color); hover-background-color: var(--primary-hover);"><i class="ph-bold ph-search"></i> Procurar</button>
+                        </div>
+                        <div id="plateSuggestions" class="absolute z-10 w-full mt-1 rounded-md shadow-lg hidden" style="background-color: var(--card-color);"></div>
                     </div>
                 </div>
                 <div id="caseResult" class="hidden space-y-4"></div>
@@ -173,7 +176,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button id="exportListPdfBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-list-dashes"></i> Lista de Casos</button>
                         <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-pdf"></i> PDF Completo</button>
-                        <button id="exportCsvBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-csv"></i> Excel (Visitas)</button>
+                        <button id="exportCsvBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg"><i class="ph-bold ph-file-csv"></i> Excel (CSV)</button>
                     </div>
                      <button id="showLogsBtn" class="mt-4 w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-file-text"></i> Ver Logs de Utilização</button>
                 </div>
@@ -257,7 +260,7 @@
                  <!-- Warranty Info -->
                 <h4 class="text-lg font-semibold pt-4" style="color:var(--primary-color);">Dados da Garantia</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label for="edit-placa" class="block text-sm font-medium">Matrícula</label><input type="text" id="edit-placa" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);" readonly></div>
+                    <div><label for="edit-placa" class="block text-sm font-medium">Placa</label><input type="text" id="edit-placa" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);" readonly></div>
                     <div><label for="edit-marca" class="block text-sm font-medium">Marca</label><input type="text" id="edit-marca" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
                     <div><label for="edit-modelo" class="block text-sm font-medium">Modelo</label><input type="text" id="edit-modelo" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
                     <div><label for="edit-ano" class="block text-sm font-medium">Ano</label><input type="text" id="edit-ano" class="mt-1 w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
@@ -331,6 +334,7 @@
                 tabs: document.querySelectorAll('.tab-button'),
                 tabContents: document.querySelectorAll('.tab-content'),
                 plateInput: document.getElementById('plateInput'),
+                plateSuggestions: document.getElementById('plateSuggestions'),
                 searchPlateBtn: document.getElementById('searchPlateBtn'),
                 caseResult: document.getElementById('caseResult'),
                 caseList: document.getElementById('caseList'),
@@ -481,8 +485,8 @@
                         if (e.target.closest('.case-card-main')) { this.switchTab('search'); App.ui.plateInput.value = card.dataset.plateValue; App.CaseManager.search(card.dataset.plateValue); }
                     });
                     document.addEventListener('click', (e) => {
-                        if (!e.target.closest('.options-menu-container')) {
-                            document.querySelectorAll('.options-menu.show').forEach(menu => menu.classList.remove('show'));
+                        if (!e.target.closest('#plateInput')) {
+                            App.ui.plateSuggestions.classList.add('hidden');
                         }
                     });
                 },
@@ -511,7 +515,7 @@
                 async _saveSighting(imageBlob) {
                     this.showLoading('Redimensionando e guardando...');
                     try {
-                        if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
+                        // FIX: Do not require location permission to save a sighting with an image
                         const picaInstance = pica();
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(imageBlob);
@@ -526,9 +530,16 @@
                         const sightingData = { 
                             placaNormalizada: App.state.currentPlate, 
                             timestamp: new Date(), 
-                            location: await App.PermissionsManager.getLocation(), 
+                            location: null, // Location is now optional
                             photo: resizedBlob 
                         };
+                        
+                        // Try to get location, but don't block if not available
+                        const location = await App.PermissionsManager.getLocation(false); // showAlert = false
+                        if (location) {
+                            sightingData.location = location;
+                        }
+
                         await App.DBManager.put(STORE_SIGHTINGS, sightingData);
                         this.showToast('Visita registada!', 'success');
                         if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
@@ -601,8 +612,8 @@
                 },
                 requestCamera: (showAlert = true) => App.PermissionsManager.request('câmara', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), showAlert),
                 requestLocation: (showAlert = true) => App.PermissionsManager.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), showAlert),
-                async getLocation() { 
-                    if(!(await this.requestLocation())) return null;
+                async getLocation(showAlert = true) { 
+                    if(!(await this.requestLocation(showAlert))) return null;
                     return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)));
                 }
             };
@@ -1280,13 +1291,7 @@
                     const doc = new jsPDF();
                     
                     const allCases = await App.DBManager.getAll(STORE_CASES);
-                    const filters = {
-                        status: document.getElementById('filter-status')?.value || 'aberto',
-                        marca: document.getElementById('filter-marca')?.value,
-                        ano: document.getElementById('filter-ano')?.value,
-                        cor: document.getElementById('filter-cor')?.value,
-                        modelo: document.getElementById('filter-modelo')?.value.toUpperCase() || ''
-                    };
+                    const filters = App.state.filterState;
                     const filteredCases = allCases.filter(c => {
                         const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
                         const modelMatch = (c.garantia?.modelo || '').toUpperCase().includes(filters.modelo);
@@ -1308,7 +1313,8 @@
                         body,
                         didDrawPage: (data) => {
                             this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
-                            this._addPdfFooter(doc, `Página ${data.pageNumber} de ${doc.internal.getNumberOfPages()}`);
+                            const footerText = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} | Página ${data.pageNumber}`;
+                            this._addPdfFooter(doc, footerText);
                         },
                         margin: { top: 35 },
                         styles: { fontSize: 10, cellPadding: 2, overflow: 'ellipsize' },
@@ -1332,7 +1338,7 @@
                     const cases = await App.DBManager.getAll(STORE_CASES);
                     const caseMap = new Map(cases.map(c => [c.placaNormalizada, c]));
                     const headers = ['Data Visita','Lat Visita','Lon Visita','Matrícula','Marca','Modelo','Ano','Cor','Cliente','CPF','Contrato', 'Status'];
-                    let csvRows = [headers.join(',')];
+                    let csvRows = ["\uFEFF" + headers.join(',')]; // Add BOM for UTF-8
                     for (const s of sightings) {
                         const c = caseMap.get(s.placaNormalizada);
                         if (!c) continue;
@@ -1393,6 +1399,37 @@
                 };
 
                 App.ui.searchPlateBtn.onclick = () => App.CaseManager.search(App.ui.plateInput.value);
+                App.ui.plateInput.addEventListener('input', async (e) => {
+                    const searchTerm = e.target.value;
+                    const suggestionsContainer = App.ui.plateSuggestions;
+
+                    if (searchTerm.length < 3) {
+                        suggestionsContainer.innerHTML = '';
+                        suggestionsContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    const allCases = await App.DBManager.getAll(STORE_CASES);
+                    const normalizedSearchTerm = App.PlateManager.normalize(searchTerm);
+                    const results = allCases.filter(c => c.placaNormalizada.includes(normalizedSearchTerm)).slice(0, 5);
+
+                    if (results.length > 0) {
+                        suggestionsContainer.innerHTML = `<ul class="py-1">${results.map(r => `<li class="px-3 py-2 cursor-pointer hover:bg-slate-700" data-plate="${r.garantia.placa}">${r.garantia.placa} - ${r.garantia.marca} ${r.garantia.modelo}</li>`).join('')}</ul>`;
+                        suggestionsContainer.classList.remove('hidden');
+                        
+                        suggestionsContainer.querySelectorAll('li').forEach(item => {
+                            item.onclick = () => {
+                                App.ui.plateInput.value = item.dataset.plate;
+                                suggestionsContainer.classList.add('hidden');
+                                App.CaseManager.search(item.dataset.plate);
+                            };
+                        });
+
+                    } else {
+                        suggestionsContainer.innerHTML = '';
+                        suggestionsContainer.classList.add('hidden');
+                    }
+                });
                 App.ui.plateInput.onkeypress = (e) => { if (e.key === 'Enter') App.CaseManager.search(App.ui.plateInput.value); };
                 App.ui.settings.parseAndSaveBtn.onclick = () => App.DataManager.saveParsedData();
                 App.ui.settings.backupBtn.onclick = () => App.DataManager.backup();
