@@ -95,7 +95,7 @@
             opacity: 1;
         }
         .help-icon {
-             display: inline-flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 1.25rem;
@@ -105,7 +105,7 @@
             color: var(--text-muted-color);
             margin-left: 0.5rem;
             cursor: help;
-            font-size: 1rem; /* Adjust icon size */
+            font-size: 0.8rem;
         }
     </style>
 </head>
@@ -388,7 +388,12 @@
                     document.querySelectorAll('.options-menu.show').forEach(m => m.classList.remove('show'));
                     if (!isShowing) menu.classList.add('show');
                 },
-                switchTab(tabId) { App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId)); App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`)); if (tabId === 'list') App.CaseManager.renderList(); },
+                switchTab(tabId) {
+    App.ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+    App.ui.tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${tabId}`)); // ✅ Fechamento correto
+    if (tabId === 'list') App.CaseManager.renderList();
+},
+
                 showLoading: (text) => { App.ui.modals.loadingText.textContent = text; App.ui.modals.loading.classList.remove('hidden'); },
                 hideLoading: () => App.ui.modals.loading.classList.add('hidden'),
                 showToast(message, type = 'info') { const c = {info:'bg-blue-500',success:'bg-green-500',error:'bg-red-500'}, i = {info:'ph-info',success:'ph-check-circle',error:'ph-x-circle'}; const t=document.createElement('div'); t.className=`toast text-white p-4 rounded-lg shadow-lg flex items-center gap-3 ${c[type]}`; t.innerHTML=`<i class="ph-bold ${i[type]} text-2xl"></i><span>${message}</span>`; App.ui.modals.toastContainer.appendChild(t); setTimeout(()=>t.remove(),5e3) },
@@ -682,7 +687,7 @@
                     
                     const createSelect = (id, lbl, opts) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts}</select></div>`;
                     const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" selected>Abertos</option><option value="encerrado">Encerrados</option><option value="todos">Todos</option></select></div>`;
-                    const sortSelect = `<div><label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label><select id="sort-order" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="placa">Matrícula</option><option value="fipe-desc">Maior Valor FIPE</option><option value="fipe-asc">Menor Valor FIPE</option></select></div>`;
+                    const sortSelect = `<div class="lg:col-start-5"><label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label><select id="sort-order" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="placa">Matrícula</option><option value="fipe-desc">Maior Valor FIPE</option><option value="fipe-asc">Menor Valor FIPE</option></select></div>`;
 
                     App.ui.filtersContainer.innerHTML = statusSelect 
                         + createSelect('filter-marca','Marca',[...uq.m].sort().map(m=>`<option>${m}</option>`).join(''))
@@ -885,6 +890,7 @@
                     const imgWidth = 45; 
                     const imgMargin = 5;
                     let x = 14;
+                    let rowMaxHeight = 0;
                 
                     for (const s of images) {
                         const offscreenCanvas = document.createElement('canvas');
@@ -892,10 +898,12 @@
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                         const dataUrl = resizedCanvas.toDataURL('image/jpeg', 0.7);
                         const imgHeight = (img.height / img.width) * imgWidth;
+                        rowMaxHeight = Math.max(rowMaxHeight, imgHeight);
                 
                         if (x + imgWidth > doc.internal.pageSize.width - 14) {
                             x = 14;
-                            currentY += imgHeight + 15;
+                            currentY += rowMaxHeight + 15;
+                            rowMaxHeight = 0;
                         }
                         if (currentY + imgHeight > doc.internal.pageSize.height - 20) {
                             doc.addPage();
@@ -907,7 +915,7 @@
                         doc.text(new Date(s.timestamp).toLocaleDateString('pt-BR'), x, currentY + imgHeight + 5);
                         x += imgWidth + imgMargin;
                     }
-                    return currentY + imgHeight + 15;
+                    return currentY + rowMaxHeight + 15;
                 },
 
                 async _generateSingleCasePdf(doc, caseData) {
@@ -928,12 +936,17 @@
                 },
                 async exportSingleCasePDF(plate) {
                     App.UIManager.showLoading('A gerar PDF do Caso...');
-                    const caseData = await App.DBManager.get(STORE_CASES, plate);
-                    if (!caseData) { App.UIManager.hideLoading(); return App.UIManager.showToast('Caso não encontrado.', 'error'); }
-                    const doc = new window.jspdf.jsPDF();
-                    await this._generateSingleCasePdf(doc, caseData);
-                    doc.save(`relatorio_${caseData.garantia.placa}.pdf`);
-                    App.UIManager.hideLoading();
+                    try {
+                        const caseData = await App.DBManager.get(STORE_CASES, plate);
+                        if (!caseData) throw new Error('Caso não encontrado.');
+                        const doc = new window.jspdf.jsPDF();
+                        await this._generateSingleCasePdf(doc, caseData);
+                        doc.save(`relatorio_${caseData.garantia.placa}.pdf`);
+                    } catch(e) {
+                        App.UIManager.showToast(e.message, 'error');
+                    } finally {
+                        App.UIManager.hideLoading();
+                    }
                 },
                 async exportAllToPDF() {
                     App.UIManager.showLoading('A gerar PDF Completo...');
