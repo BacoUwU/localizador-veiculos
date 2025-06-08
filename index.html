@@ -408,25 +408,31 @@
                     App.ui.tabs.forEach(tab => tab.addEventListener('click', () => this.switchTab(tab.dataset.tab)));
                     App.ui.caseResult.addEventListener('click', (e) => {
                         const btn = e.target.closest('button');
-                        if (!btn) return;
-
-                        if (btn.classList.contains('add-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate });
-                        else if (btn.classList.contains('add-observation-btn')) App.ObservationManager.showObservationModal(btn.dataset.plate);
-                        else if (btn.classList.contains('add-sighting-btn')) this.showImageSourceModal(btn.dataset.plate);
-                        else if (btn.classList.contains('toggle-status-btn')) App.CaseManager.toggleCaseStatus(btn.dataset.plate);
-                        else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
-                        else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
-                        else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate); // Event for edit button
-                        else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
-                        else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
-                        else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
-                        else if (e.target.closest('li')) {
-                            const li = e.target.closest('li');
-                            if (e.target.closest('.view-photo-btn')) this.showPhoto(parseInt(li.dataset.sightingId));
-                            if (e.target.closest('.delete-sighting-btn')) App.CaseManager.deleteSighting(parseInt(li.dataset.sightingId), li.dataset.plate);
-                            if (e.target.closest('.navigate-btn')) App.AddressManager.navigate(parseInt(li.dataset.addressId));
-                            if (e.target.closest('.delete-observation-btn')) App.ObservationManager.deleteObservation(parseInt(li.dataset.observationId), li.dataset.plate);
+                        if (btn) {
+                            if (btn.classList.contains('add-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate });
+                            else if (btn.classList.contains('add-observation-btn')) App.ObservationManager.showObservationModal(btn.dataset.plate);
+                            else if (btn.classList.contains('add-sighting-btn')) this.showImageSourceModal(btn.dataset.plate);
+                            else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
+                            else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
+                            else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate); // Event for edit button
+                            else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
+                            else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
+                            else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
                         }
+
+                        const li = e.target.closest('li');
+                        if (li) {
+                             if (e.target.closest('.view-photo-btn')) this.showPhoto(parseInt(li.dataset.sightingId));
+                             if (e.target.closest('.delete-sighting-btn')) App.CaseManager.deleteSighting(parseInt(li.dataset.sightingId), li.dataset.plate);
+                             if (e.target.closest('.navigate-btn')) App.AddressManager.navigate(parseInt(li.dataset.addressId));
+                             if (e.target.closest('.delete-observation-btn')) App.ObservationManager.deleteObservation(parseInt(li.dataset.observationId), li.dataset.plate);
+                        }
+
+                        const switchInput = e.target.closest('.toggle-status-switch');
+                         if(switchInput && e.target.tagName === 'INPUT') {
+                            App.CaseManager.toggleCaseStatus(e.target.dataset.plate, e.target);
+                        }
+
                     });
                     App.ui.caseList.addEventListener('click', e => {
                         const card = e.target.closest('.case-card');
@@ -462,9 +468,9 @@
                 showImageSourceModal(plate) { App.state.currentPlate = plate; App.ui.modals.imageSource.classList.remove('hidden'); },
                 hideImageSourceModal() { App.ui.modals.imageSource.classList.add('hidden'); },
                 async _saveSighting(imageBlob) {
+                    if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
                     this.showLoading('Redimensionando e guardando...');
                     try {
-                        if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
                         const picaInstance = pica();
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(imageBlob);
@@ -701,12 +707,34 @@
                     const observationsHtml = observations.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(o=>`<li data-observation-id="${o.id}" data-plate="${o.placaNormalizada}" class="flex justify-between items-start p-3 rounded-md gap-2" style="background-color: var(--input-bg);"><div class="flex-grow text-sm"><p class="font-semibold" style="color: var(--text-muted-color);">${new Date(o.timestamp).toLocaleString('pt-BR')}</p><p>${o.text}</p></div><button title="Excluir Observação" class="delete-observation-btn text-red-500 flex-shrink-0"><i class="ph-fill ph-trash text-3xl"></i></button></li>`).join('')||`<li class="p-3">Nenhuma observação geral.</li>`;
                     
                     const caseStatus = caseData.status || 'aberto';
-                    const statusText = caseStatus.toUpperCase() + (caseStatus === 'encerrado' && caseData.dataEncerramento ? ` em ${new Date(caseData.dataEncerramento).toLocaleDateString('pt-BR')}` : '');
-                    const toggleStatusBtnText = caseStatus === 'aberto' ? 'Marcar como Encerrado' : 'Reabrir Caso';
-                    const toggleStatusBtnColor = caseStatus === 'aberto' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700';
-
+                    
                     App.ui.caseResult.innerHTML = `<div class="p-6 rounded-lg shadow-lg space-y-6" style="background-color: var(--card-color);">
-                        <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Status do Caso: <span class="${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${statusText}</span></h3><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><button data-plate="${caseData.placaNormalizada}" class="edit-case-btn w-full text-white font-bold py-2 px-4 rounded-md bg-green-600 hover:bg-green-700">Editar Caso</button><button data-plate="${caseData.placaNormalizada}" class="toggle-status-btn w-full text-white font-bold py-2 px-4 rounded-md ${toggleStatusBtnColor}">${toggleStatusBtnText}</button><button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Exportar PDF</button><button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-md">Excluir Caso</button></div></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-bold" style="color:var(--primary-color);">${caseData.garantia.placa}</h3>
+                                <p class="text-lg" style="color:var(--text-muted-color);">${caseData.garantia.marca} ${caseData.garantia.modelo}</p>
+                            </div>
+                            <div class="relative options-menu-container">
+                                <button title="Opções do Caso" class="toggle-options-btn p-2 rounded-full hover:bg-slate-700"><i class="ph-fill ph-list text-3xl"></i></button>
+                                <div class="options-menu w-48">
+                                    <button data-plate="${caseData.placaNormalizada}" class="edit-case-btn w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Editar Caso</button>
+                                    <button data-plate="${caseData.placaNormalizada}" class="export-case-pdf-btn w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2"><i class="ph-bold ph-file-pdf"></i> Exportar PDF</button>
+                                    <button data-plate="${caseData.placaNormalizada}" class="delete-case-btn w-full text-left px-4 py-2 text-red-400 hover:bg-slate-700 flex items-center gap-2"><i class="ph-bold ph-trash"></i> Excluir Caso</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pb-2" style="border-bottom: 2px solid var(--border-color);">
+                            <h4 class="text-xl font-bold" style="color:var(--primary-color);">Status do Caso</h4>
+                            <div class="flex items-center gap-4">
+                                <span class="text-lg font-semibold ${caseStatus === 'aberto' ? 'text-green-400' : 'text-yellow-400'}">${caseStatus === 'aberto' ? 'Aberto' : 'Encerrado'}</span>
+                                <label class="relative inline-flex items-center cursor-pointer toggle-status-switch" data-plate="${caseData.placaNormalizada}">
+                                    <input type="checkbox" class="sr-only peer" ${caseStatus === 'encerrado' ? 'checked' : ''}>
+                                    <div class="w-14 h-8 bg-gray-400 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                        </div>
+
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${contractDetails}</div></div>
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${warrantyDetails}</div></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
@@ -777,18 +805,23 @@
                     this.search(existingData.garantia.placa); // Refresh the view
                 },
                 async deleteSighting(id, p) { if (await App.UIManager.showConfirmation('Excluir Visita', 'Deseja excluir este registo?')) { await App.DBManager.delete(STORE_SIGHTINGS, id); App.UIManager.showToast('Visita excluída.', 'success'); this.search(p); } },
-                async toggleCaseStatus(plate) {
+                async toggleCaseStatus(plate, switchElement) {
                     const caseData = await App.DBManager.get(STORE_CASES, plate);
                     if (!caseData) return;
-                    const isClosing = (caseData.status || 'aberto') === 'aberto';
+
+                    const isClosing = switchElement.checked;
                     const newStatus = isClosing ? 'encerrado' : 'aberto';
                     const confirmationMessage = isClosing ? 'Deseja marcar este caso como encerrado?' : 'Deseja reabrir este caso?';
+
                     if (await App.UIManager.showConfirmation('Alterar Status do Caso', confirmationMessage)) {
                         caseData.status = newStatus;
                         caseData.dataEncerramento = isClosing ? new Date().toISOString() : null;
                         await App.DBManager.put(STORE_CASES, caseData);
                         App.UIManager.showToast(`Caso ${newStatus}!`, 'success');
-                        this.search(plate);
+                        this.search(caseData.garantia.placa); 
+                    } else {
+                        // Revert the switch if the user cancels
+                        switchElement.checked = !isClosing;
                     }
                 },
                 async deleteCase(plate) {
@@ -845,15 +878,15 @@
                     };
                     let filtered = allCases.filter(c => {
                         const statusMatch = filters.status === 'todos' || (c.status || 'aberto') === filters.status;
-                        const modelMatch = (c.garantia.modelo || '').toUpperCase().includes(filters.modelo);
+                        const modelMatch = (c.garantia?.modelo || '').toUpperCase().includes(filters.modelo);
                         return statusMatch && modelMatch && (!filters.marca || c.garantia.marca === filters.marca) && (!filters.ano || c.garantia.ano === filters.ano) && (!filters.cor || c.garantia.cor === filters.cor);
                     });
                     
                     const parseFipe = (val) => parseFloat((val || '0').replace(/[^0-9,]/g, '').replace(',', '.'));
                     filtered.sort((a, b) => {
-                        if (filters.sort === 'fipe-asc') return parseFipe(a.garantia.valorFIPE) - parseFipe(b.garantia.valorFIPE);
-                        if (filters.sort === 'fipe-desc') return parseFipe(b.garantia.valorFIPE) - parseFipe(a.garantia.valorFIPE);
-                        return (a.garantia.placa || '').localeCompare(b.garantia.placa || '');
+                        if (filters.sort === 'fipe-asc') return parseFipe(a.garantia?.valorFIPE) - parseFipe(b.garantia?.valorFIPE);
+                        if (filters.sort === 'fipe-desc') return parseFipe(b.garantia?.valorFIPE) - parseFipe(a.garantia?.valorFIPE);
+                        return (a.garantia?.placa || '').localeCompare(b.garantia?.placa || '');
                     });
 
                     this.displayFilteredCases(filtered);
@@ -897,17 +930,32 @@
                          }
                          const singleLineRegex = new RegExp(`${keyword}(\\s*|:)\\s*(.+)`, 'i');
                          const match = text.match(singleLineRegex);
-                         if (match) return match[2].trim();
+                         if (match && match.length > 2) return match[2].trim();
 
+                         return null;
+                    };
+                    
+                    const getSpecificNextLineValue = (keyword, precedingKeyword, data = text) => {
+                         const lines = data.split('\n');
+                         let precedingFound = false;
+                         for(let i=0; i<lines.length; i++) {
+                             if(lines[i].toUpperCase().trim().startsWith(precedingKeyword.toUpperCase())) {
+                                 precedingFound = true;
+                             }
+                             if(precedingFound && lines[i].toUpperCase().trim().startsWith(keyword.toUpperCase()) && lines[i+1]) {
+                                 return lines[i+1].trim().replace(/^[\d\s-]*\s?/, '');
+                             }
+                         }
                          return null;
                     };
 
                     const data = { garantia: {} };
                     
                     data.contrato = text.match(/Info\. Contrato:\s*(\S+)/i)?.[1] || null;
-                    data.cliente = getFieldValue('Cliente');
+                    data.cliente = getSpecificNextLineValue('Cliente', 'Informações', text);
                     data.cpf = getFieldValue('CPF/CNPJ');
                     data.telefone = getFieldValue('Telefone Preferencial');
+                    
                     data.atrasoDesde = text.match(/desde\s*(\d{2}\/\d{2}\/\d{4})/i)?.[1] || null;
                     data.notificacao = getFieldValue('Notificação');
                     
@@ -1013,13 +1061,14 @@
                     const imgMargin = 5;
                     let x = 14;
                     let rowMaxHeight = 0;
+                    let imgHeight = 0; // Declare imgHeight here
                 
                     for (const s of images) {
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(s.photo);
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                         const dataUrl = resizedCanvas.toDataURL('image/jpeg', 0.7);
-                        const imgHeight = (img.height / img.width) * imgWidth;
+                        imgHeight = (img.height / img.width) * imgWidth; // Assign value inside the loop
                         rowMaxHeight = Math.max(rowMaxHeight, imgHeight);
                 
                         if (x + imgWidth > doc.internal.pageSize.width - 14) {
