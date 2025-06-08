@@ -511,7 +511,17 @@
                 async _saveSighting(imageBlob) {
                     this.showLoading('Redimensionando e guardando...');
                     try {
-                        if (!(await App.PermissionsManager.requestLocation())) return App.UIManager.showToast('Permissão de localização é necessária.', 'error');
+                        // FIX: Request location permission only when needed for GPS addresses, not for all sightings
+                        const sightingData = { 
+                            placaNormalizada: App.state.currentPlate, 
+                            timestamp: new Date(), 
+                            photo: imageBlob // save original blob first
+                        };
+                        
+                        // Perform resizing after initial save to improve user experience
+                        this.hideLoading();
+                        this.showToast('Visita registada! A otimizar imagem...', 'info');
+
                         const picaInstance = pica();
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(imageBlob);
@@ -523,19 +533,13 @@
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                         const resizedBlob = await picaInstance.toBlob(resizedCanvas, 'image/jpeg', 0.8);
                         
-                        const sightingData = { 
-                            placaNormalizada: App.state.currentPlate, 
-                            timestamp: new Date(), 
-                            location: await App.PermissionsManager.getLocation(), 
-                            photo: resizedBlob 
-                        };
+                        sightingData.photo = resizedBlob;
                         await App.DBManager.put(STORE_SIGHTINGS, sightingData);
-                        this.showToast('Visita registada!', 'success');
+                        
                         if (document.getElementById('tab-search').classList.contains('active') && App.ui.plateInput.value) App.CaseManager.search(App.ui.plateInput.value);
                     } catch(e) {
                         this.showToast(`Erro ao guardar visita: ${e.message}`, 'error');
-                    } finally {
-                        this.hideLoading();
+                         this.hideLoading();
                     }
                 },
                 showRestoreStrategyModal() {
@@ -1165,12 +1169,11 @@
                     const docWidth = doc.internal.pageSize.getWidth();
                     doc.text(titleText, (docWidth - titleWidth) / 2, 22);
                 },
-                _addPdfFooter(doc, filters) {
+                _addPdfFooter(doc, footerText) {
                     const pageCount = doc.internal.getNumberOfPages();
                     doc.setFontSize(8);
                     for(var i = 1; i <= pageCount; i++) {
                         doc.setPage(i);
-                        const footerText = `Lista de Casos (${filters.status.toUpperCase()}) - Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
                         const pageWidth = doc.internal.pageSize.getWidth();
                         doc.text(footerText, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
                     }
@@ -1226,7 +1229,8 @@
                 async _generateSingleCasePdf(doc, caseData) {
                     const [sightings, addresses, observations] = await Promise.all([ App.DBManager.getFromIndex(STORE_SIGHTINGS, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_ADDRESSES, 'placaNormalizada', caseData.placaNormalizada), App.DBManager.getFromIndex(STORE_OBSERVATIONS, 'placaNormalizada', caseData.placaNormalizada) ]);
                     
-                    let lastY = this._addPdfHeader(doc, `Relatório do Caso: ${caseData.garantia.placa}`);
+                    this._addPdfHeader(doc, `Relatório do Caso: ${caseData.garantia.placa}`);
+                    let lastY = 35;
                     const caseDetails = [
                         ['Cliente', caseData.cliente], ['CPF', caseData.cpf], ['Telefone', caseData.telefone],
                         ['Contrato', caseData.contrato], ['Atraso Desde', caseData.atrasoDesde],
@@ -1301,13 +1305,16 @@
                         c.garantia.cor,
                         c.garantia.valorFIPE?.match(/R\$\s*[\d,.]+/)?.[0] || 'N/A'
                     ]));
+                    
+                    const addPageContent = (data) => {
+                        this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
+                        this._addPdfFooter(doc, filters);
+                    };
 
                     doc.autoTable({
                         head: [['Contrato', 'Veículo', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
-                        didDrawPage: (data) => {
-                            this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
-                        },
+                        didDrawPage: addPageContent,
                         margin: { top: 35 },
                         styles: { fontSize: 10, cellPadding: 2, overflow: 'ellipsize' },
                         headStyles: { fontSize: 11, fillColor: [41, 128, 185], halign: 'center' },
@@ -1319,8 +1326,6 @@
                            4: { halign: 'left', cellWidth: 30 }, 
                         }
                     });
-                    
-                    this._addPdfFooter(doc, filters);
 
                     doc.save(`lista_casos_${new Date().toISOString().slice(0, 10)}.pdf`);
                     App.UIManager.hideLoading();
