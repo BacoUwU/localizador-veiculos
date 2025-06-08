@@ -430,7 +430,7 @@
 
                         const switchInput = e.target.closest('.toggle-status-switch');
                          if(switchInput && e.target.tagName === 'INPUT') {
-                            App.CaseManager.toggleCaseStatus(e.target.dataset.plate, e.target);
+                            App.CaseManager.toggleCaseStatus(switchInput.dataset.plate, e.target);
                         }
 
                     });
