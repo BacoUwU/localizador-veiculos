@@ -284,6 +284,7 @@
                     <label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto da(s) morada(s):</label>
                     <textarea id="addressTextInput" rows="8" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Pode colar múltiplas moradas. O sistema irá tentar separá-las."></textarea>
                 </div>
+                <div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div>
                  <div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div>
                  <button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button>
             </div>
@@ -515,7 +516,6 @@
                 async _saveSighting(imageBlob) {
                     this.showLoading('Redimensionando e guardando...');
                     try {
-                        // FIX: Do not require location permission to save a sighting with an image
                         const picaInstance = pica();
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(imageBlob);
@@ -530,11 +530,10 @@
                         const sightingData = { 
                             placaNormalizada: App.state.currentPlate, 
                             timestamp: new Date(), 
-                            location: null, // Location is now optional
+                            location: null, 
                             photo: resizedBlob 
                         };
                         
-                        // Try to get location, but don't block if not available
                         const location = await App.PermissionsManager.getLocation(false); // showAlert = false
                         if (location) {
                             sightingData.location = location;
@@ -644,7 +643,7 @@
                 },
                 hideAddressModal:()=>App.ui.modals.address.classList.add('hidden'),
                 async handleParseAndSave() {
-                    App.UIManager.hideAddressModal();
+                    this.hideAddressModal();
                     const text = App.ui.modals.addressTextInput.value;
                     const obs = App.ui.modals.addressObsInput.value;
                     if (!text) return App.UIManager.showToast('O campo de morada está vazio.', 'error');
@@ -974,7 +973,7 @@
                     
                     const createSelect = (id, lbl, opts, selectedVal) => `<div><label for="${id}" class="block text-sm font-medium mb-1">${lbl}</label><select id="${id}" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="">Todas</option>${opts.map(o => `<option ${o === selectedVal ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
                     const statusSelect = `<div><label for="filter-status" class="block text-sm font-medium mb-1">Status</label><select id="filter-status" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="aberto" ${App.state.filterState.status === 'aberto' ? 'selected' : ''}>Abertos</option><option value="encerrado" ${App.state.filterState.status === 'encerrado' ? 'selected' : ''}>Encerrados</option><option value="todos" ${App.state.filterState.status === 'todos' ? 'selected' : ''}>Todos</option></select></div>`;
-                    const sortSelect = `<div class="lg:col-start-5"><label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label><select id="sort-order" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="placa" ${App.state.filterState.sort === 'placa' ? 'selected' : ''}>Matrícula</option><option value="fipe-desc" ${App.state.filterState.sort === 'fipe-desc' ? 'selected' : ''}>Maior Valor FIPE</option><option value="fipe-asc" ${App.state.filterState.sort === 'fipe-asc' ? 'selected' : ''}>Menor Valor FIPE</option></select></div>`;
+                    const sortSelect = `<div class="lg:col-start-5"><label for="sort-order" class="block text-sm font-medium mb-1">Ordenar por</label><select id="sort-order" class="filter-select mt-1 block w-full border rounded-md py-2 px-3 focus:outline-none" style="background-color:var(--input-bg); border-color:var(--border-color);"><option value="placa" ${App.state.filterState.sort === 'placa' ? 'selected' : ''}>Placa</option><option value="fipe-desc" ${App.state.filterState.sort === 'fipe-desc' ? 'selected' : ''}>Maior Valor FIPE</option><option value="fipe-asc" ${App.state.filterState.sort === 'fipe-asc' ? 'selected' : ''}>Menor Valor FIPE</option></select></div>`;
 
                     App.ui.filtersContainer.innerHTML = statusSelect 
                         + createSelect('filter-marca','Marca',[...uq.m].sort(), App.state.filterState.marca)
@@ -1035,7 +1034,7 @@
                         
                         const statusIndicator = (c.status === 'encerrado') ? `<span class="text-xs font-bold text-yellow-400 bg-yellow-900/50 px-2 py-1 rounded-full">Encerrado</span>` : '';
                         
-                        card.innerHTML = `<div class="flex justify-between items-center gap-4"><div class="case-card-main flex-grow cursor-pointer"><div class="flex items-center gap-2"><h3 class="text-xl font-bold" style="color:var(--primary-color);">${c.garantia.marca} ${c.garantia.modelo}</h3>${statusIndicator}</div><p class="text-md" style="color:var(--text-muted-color);">Contrato: ${c.contrato || 'N/A'}<br>Matrícula: <strong>${c.garantia.placa}</strong> | Cor: ${c.garantia.cor}</p></div></div>`;
+                        card.innerHTML = `<div class="flex justify-between items-center gap-4"><div class="case-card-main flex-grow cursor-pointer"><div class="flex items-center gap-2"><h3 class="text-xl font-bold" style="color:var(--primary-color);">${c.garantia.marca} ${c.garantia.modelo}</h3>${statusIndicator}</div><p class="text-md" style="color:var(--text-muted-color);">Contrato: ${c.contrato || 'N/A'}<br>Placa: <strong>${c.garantia.placa}</strong> | Cor: ${c.garantia.cor}</p></div></div>`;
                         App.ui.caseList.appendChild(card);
                     });
                     App.ui.loadMoreBtn.classList.toggle('hidden', end >= filteredCases.length);
@@ -1048,8 +1047,8 @@
             // =================================================================================
             App.DataManager = {
                 parse(text) {
-                    const getFieldValue = (keyword) => {
-                         const lines = text.split('\n');
+                    const getFieldValue = (keyword, data = text) => {
+                         const lines = data.split('\n');
                          const keywordIndex = lines.findIndex(l => l.toUpperCase().trim().startsWith(keyword.toUpperCase()));
                          if (keywordIndex > -1 && lines[keywordIndex + 1]) {
                              let value = lines[keywordIndex + 1].trim();
@@ -1208,7 +1207,7 @@
                     let rowMaxHeight = 0;
                     let imgHeight = 0; // Declare imgHeight here
                 
-                    for (const s of images) {
+                    for (const s of sightings) {
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(s.photo);
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
@@ -1308,12 +1307,13 @@
                         c.garantia.valorFIPE?.match(/R\$\s*[\d,.]+/)?.[0] || 'N/A'
                     ]));
                     
+                    const footerText = `Lista de Casos (${filters.status.toUpperCase()}) - Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+                    
                     doc.autoTable({
                         head: [['Contrato', 'Veículo', 'Placa', 'Cor', 'Valor FIPE']],
                         body,
                         didDrawPage: (data) => {
-                            this._addPdfHeader(doc, `Lista de Casos (${filters.status.toUpperCase()})`);
-                            const footerText = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} | Página ${data.pageNumber}`;
+                            this._addPdfHeader(doc, `Lista de Casos`);
                             this._addPdfFooter(doc, footerText);
                         },
                         margin: { top: 35 },
