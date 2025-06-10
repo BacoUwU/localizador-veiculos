@@ -534,7 +534,7 @@
                             photo: resizedBlob 
                         };
                         
-                        const location = await App.PermissionsManager.getLocation(false); // showAlert = false
+                        const location = await App.PermissionsManager.getLocation(false); 
                         if (location) {
                             sightingData.location = location;
                         }
@@ -612,8 +612,31 @@
                 requestCamera: (showAlert = true) => App.PermissionsManager.request('câmara', () => navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())), showAlert),
                 requestLocation: (showAlert = true) => App.PermissionsManager.request('localização', () => new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true})), showAlert),
                 async getLocation(showAlert = true) { 
-                    if(!(await this.requestLocation(showAlert))) return null;
-                    return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)));
+                    try {
+                        if(!(await this.requestLocation(showAlert))) return null;
+                        return new Promise(r=>navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude}),()=>r(null)));
+                    } catch (e) {
+                        if(showAlert) App.UIManager.showToast("Não foi possível obter a localização.", "error");
+                        return null;
+                    }
+                }
+            };
+
+            // =================================================================================
+            // VALIDATION MANAGER (CPF, etc.)
+            // =================================================================================
+            App.ValidationManager = {
+                isValidCPF(cpf) {
+                    if (typeof cpf !== 'string') return false;
+                    cpf = cpf.replace(/[^\d]+/g, '');
+                    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+                    cpf = cpf.split('').map(el => +el);
+                    const rest = (count) => (cpf.slice(0, count - 12).reduce((s, e, i) => s + e * (count - i), 0) * 10) % 11 % 10;
+                    return rest(10) === cpf[9] && rest(11) === cpf[10];
+                },
+                // Placeholder for CNPJ validation if needed in the future
+                isValidCNPJ(cnpj) {
+                    return true; // Simple placeholder
                 }
             };
             
@@ -642,27 +665,36 @@
                     App.ui.modals.address.classList.remove('hidden'); 
                 },
                 hideAddressModal:()=>App.ui.modals.address.classList.add('hidden'),
-                async handleParseAndSave() {
-                    this.hideAddressModal();
-                    const text = App.ui.modals.addressTextInput.value;
-                    const obs = App.ui.modals.addressObsInput.value;
-                    if (!text) return App.UIManager.showToast('O campo de morada está vazio.', 'error');
-                    
+                handleParseAndSave: async function () {
+                    App.AddressManager.hideAddressModal();
+                    const text = App.ui.modals.addressTextInput.value.trim();
+                    const obs = App.ui.modals.addressObsInput.value.trim();
+                    if (!text) {
+                        App.UIManager.showToast('O campo de morada está vazio.', 'error');
+                        return;
+                    }
+
                     App.UIManager.showLoading("A analisar moradas...");
-                    const parsedAddresses = App.AddressParser.parseBlock(text);
-                    App.UIManager.hideLoading();
+                    try {
+                        const parsedAddresses = App.AddressParser.parseBlock(text);
+                        App.UIManager.hideLoading();
 
-                    if (parsedAddresses.length === 0) {
-                        return App.UIManager.showToast('Nenhuma morada válida encontrada no texto.', 'error');
+                        if (parsedAddresses.length === 0) {
+                            App.UIManager.showToast('Nenhuma morada válida encontrada no texto.', 'error');
+                            return;
+                        }
+                        
+                        if (obs) {
+                            parsedAddresses.forEach(addr => addr.observacoes = obs);
+                        }
+                        
+                        App.state.parsedAddresses = parsedAddresses;
+                        this.showAddressPreview(parsedAddresses);
+                    } catch (error) {
+                        App.UIManager.hideLoading();
+                        App.UIManager.showToast('Erro ao processar moradas: ' + error.message, 'error');
+                        console.error('Erro em handleParseAndSave:', error);
                     }
-
-                    // Add observations to all parsed addresses if provided
-                    if(obs) {
-                        parsedAddresses.forEach(addr => addr.observacoes = obs);
-                    }
-                    
-                    App.state.parsedAddresses = parsedAddresses;
-                    this.showAddressPreview(parsedAddresses);
                 },
                 showAddressPreview(parsedList) {
                     const contentEl = App.ui.modals.addressPreviewContent;
@@ -700,10 +732,10 @@
                     App.UIManager.showToast('Morada GPS guardada!', 'success');
                     App.CaseManager.search(App.state.currentPlate);
                 },
-                formatForEdit(addr) { return `${addr.logradouro||''}, ${addr.numero||'S/N'}, ${addr.bairro||''}, ${addr.cidade||''}, ${addr.estado||''}, ${addr.cep||''}`; },
-                format(addr) { let b=(addr.tipo==='GPS')?`📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})`:`🏠 ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;return b},
-                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Morada: ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`;if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
-                async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
+                formatForEdit(addr) { return `${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'}, ${addr.bairro||''}, ${addr.cidade||''}, ${addr.estado||''}, ${addr.cep||''}`.trim(); },
+                format(addr) { let b=(addr.tipo==='GPS')?`📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})`:`🏠 ${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();if(addr.observacoes)b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;return b},
+                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Morada: ${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
+                async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.tipoLogradouro || ''} ${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
                 async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Morada','Deseja apagar esta morada?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Morada excluída.','success');App.CaseManager.search(p)}}
             };
             
@@ -712,51 +744,62 @@
             // =================================================================================
             App.AddressParser = {
                 parseBlock(text) {
-                    const addressBlocks = text.split(/(?=Residencial|Comercial|Outros)/i);
+                    const blocks = text
+                        .split(/\n{2,}|(?=CEP\s?\d{5}-?\d{3})/i)
+                        .map(b => b.trim())
+                        .filter(b => b.length > 20);
+
                     const parsedAddresses = [];
 
-                    for (const block of addressBlocks) {
-                        if (block.trim() === '') continue;
-                        
-                        let formattedBlock = block.replace(/([a-z])([A-Z])/g, '$1 $2');
-                        formattedBlock = formattedBlock.replace(/UFCEP/g, 'UF CEP');
+                    for (const block of blocks) {
+                        const formattedBlock = block
+                            .replace(/([a-z])([A-Z])/g, '$1 $2')
+                            .replace(/UFCEP/g, 'UF CEP');
 
                         const addr = this.parseSingle(formattedBlock);
-                        if(addr.logradouro || addr.cidade || addr.cep) {
-                             parsedAddresses.push(addr);
+                        
+                        if (addr.logradouro || addr.cidade || addr.cep) {
+                            parsedAddresses.push(addr);
                         }
                     }
                     return parsedAddresses;
                 },
 
                 parseSingle(text) {
-                    const R = (txt, regex) => { 
-                        const match = txt.match(regex); 
-                        return match ? match[1].trim() : null; 
+                     const R = (txt, regex) => {
+                        const match = txt.match(regex);
+                        return match ? match[1].trim() : null;
                     };
-                    text = ` ${text.replace(/[.,]/g, ' ')} `;
+
+                    let cleanText = ` ${text.replace(/[.,]/g, ' ')} `;
+
                     const addr = {};
+                    addr.tipo = R(cleanText, /(Residencial|Comercial|Outros)/i);
+                    const tipoLogradouroMatch = cleanText.match(/\b(Rua|Av|Avenida|Est|Estrada|Travessa|Tv)\b/i);
+                    addr.tipoLogradouro = tipoLogradouroMatch ? tipoLogradouroMatch[0] : null;
 
-                    addr.tipo = R(text, /(Residencial|Comercial|Outros)/i);
-                    addr.cep = R(text, /CEP\s?(\d{8}|\d{5}-\d{3})/i);
-                    addr.estado = R(text, /\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
-
-                    const cityMatch = text.match(/\b(Cuiaba|Sinop|Alta Floresta)\b/i);
-                    addr.cidade = cityMatch ? cityMatch[0] : null;
-
-                    const numMatch = text.match(/(?:Numero|Num|N[º°]?)\s*(\d+)/i) || text.match(/\b\d+\b/);
-                    addr.numero = numMatch ? numMatch[0].replace(/\D/g, '') : null;
+                    addr.cep = R(cleanText, /CEP\s?(\d{5}-?\d{3})/i);
+                    addr.estado = R(cleanText, /\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
                     
-                    const bairroMatch = text.match(/(?:Bairro|Setor|St|Jd|Jardim)\s*([\w\s]+?)(?=,|$|\d{5}-\d{3})/i);
+                    const cityMatch = cleanText.match(/\b([A-Z][a-záéíóúãõç]+(?:\s+[A-Z][a-záéíóúãõç]+)*)\b/gi);
+                    addr.cidade = cityMatch ? cityMatch.slice(-1)[0] : null;
+
+                    const numMatch = cleanText.match(/(?:Número|Num|N[º°]?)\s*(\d{1,5})/i) || cleanText.match(/\b\d{1,5}\b/);
+                    addr.numero = numMatch ? (numMatch[1] || numMatch[0]) : null;
+
+                    const bairroMatch = cleanText.match(/(?:Bairro|Setor|St|Jd|Jardim)\s*([\w\s]+?)(?=,|$|\d{5}-\d{3})/i);
                     addr.bairro = bairroMatch ? bairroMatch[1].trim() : null;
 
-                    addr.logradouro = text.replace(/(Residencial|Comercial|Outros|Rua|Av|Avenida|Est|Estrada|Numero|Num|N[º°]?|CEP)/gi, '')
-                                        .replace(addr.cep || '', '')
-                                        .replace(addr.numero || '', '')
-                                        .replace(addr.bairro || '', '')
-                                        .replace(addr.cidade || '', '')
-                                        .replace(addr.estado || '', '')
-                                        .replace(/\s+/g, ' ').trim();
+                    addr.logradouro = cleanText
+                        .replace(/(Residencial|Comercial|Outros|Rua|Av|Avenida|Est|Estrada|Travessa|Tv|Número|Num|N[º°]?|CEP|Bairro|Setor|Jardim|Jd)/gi, '')
+                        .replace(addr.cep || '', '')
+                        .replace(addr.numero || '', '')
+                        .replace(addr.bairro || '', '')
+                        .replace(addr.cidade || '', '')
+                        .replace(addr.estado || '', '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+
                     return addr;
                 }
             };
@@ -821,15 +864,28 @@
                     });
                 },
                 renderCaseDetails(caseData, sightings, addresses, observations) {
-                    const detailItem = (label, value) => `<p><strong class="font-semibold">${label}:</strong> ${value || 'N/A'}</p>`;
-                    const contractDetails = [
+                    const detailItem = (label, value, extraHtml = '') => {
+                        if (!value || value === 'N/A') return '';
+                        return `<p><strong class="font-semibold">${label}:</strong> ${value} ${extraHtml}</p>`;
+                    };
+
+                    const contractItems = [
                         {label: 'Cliente', value: caseData.cliente},
                         {label: 'CPF', value: caseData.cpf},
                         {label: 'Telefone', value: caseData.telefone},
                         {label: 'Contrato', value: caseData.contrato},
                         {label: 'Atraso Desde', value: caseData.atrasoDesde},
                         {label: 'Notificação', value: caseData.notificacao},
-                    ].map(item => (item.value && item.value !== 'N/A') ? detailItem(item.label, item.value) : '').join('');
+                    ];
+
+                    const contractDetails = contractItems.map(item => {
+                        let extra = '';
+                        if (item.label === 'CPF' && item.value) {
+                             if (caseData.cpfValido === true) extra = `<i class="ph-bold ph-check-circle text-green-400" title="CPF Válido"></i>`;
+                             else if (caseData.cpfValido === false) extra = `<i class="ph-bold ph-warning-circle text-red-400" title="CPF Inválido"></i>`;
+                        }
+                        return detailItem(item.label, item.value, extra);
+                    }).join('');
 
                     const warrantyDetails = Object.entries(caseData.garantia).map(([k,v]) => detailItem(k.charAt(0).toUpperCase()+k.slice(1),v)).join('');
                     
@@ -911,10 +967,12 @@
                     if (!existingData) return App.UIManager.showToast('Erro ao guardar: caso não encontrado.', 'error');
 
                     const form = App.ui.modals.editCaseForm;
+                    const cpfValue = form.querySelector('#edit-cpf').value;
                     const updatedData = {
                         ...existingData, // Preserve all existing data first
                         cliente: form.querySelector('#edit-cliente').value,
-                        cpf: form.querySelector('#edit-cpf').value,
+                        cpf: cpfValue,
+                        cpfValido: App.ValidationManager.isValidCPF(cpfValue),
                         telefone: form.querySelector('#edit-telefone').value,
                         atrasoDesde: form.querySelector('#edit-atrasoDesde').value,
                         notificacao: form.querySelector('#edit-notificacao').value,
@@ -1047,8 +1105,8 @@
             // =================================================================================
             App.DataManager = {
                 parse(text) {
-                    const getFieldValue = (keyword, data = text) => {
-                         const lines = data.split('\n');
+                    const getFieldValue = (keyword) => {
+                         const lines = text.split('\n');
                          const keywordIndex = lines.findIndex(l => l.toUpperCase().trim().startsWith(keyword.toUpperCase()));
                          if (keywordIndex > -1 && lines[keywordIndex + 1]) {
                              let value = lines[keywordIndex + 1].trim();
@@ -1083,6 +1141,7 @@
                     data.contrato = text.match(/Info\. Contrato:\s*(\S+)/i)?.[1] || null;
                     data.cliente = getSpecificNextLineValue('Cliente', 'Informações', text);
                     data.cpf = getFieldValue('CPF/CNPJ');
+                    data.cpfValido = App.ValidationManager.isValidCPF(data.cpf);
                     data.telefone = getFieldValue('Telefone Preferencial');
                     
                     data.atrasoDesde = text.match(/desde\s*(\d{2}\/\d{2}\/\d{4})/i)?.[1] || null;
@@ -1185,7 +1244,7 @@
                         doc.text(footerText, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
                     }
                 },
-                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY, theme: 'grid' }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY, theme: 'grid', headStyles: { halign: 'center', fillColor: [41, 128, 185] }, columnStyles: { 0: { cellWidth: 'auto'} } }); return doc.lastAutoTable.finalY + 10; } return startY; },
                 
                 async _addPdfImages(doc, sightings, startY) {
                     const images = sightings.filter(s => s.photo);
@@ -1197,7 +1256,7 @@
                         currentY = 20;
                     }
 
-                    doc.autoTable({ head: [['Visitas e Avistamentos (Imagens)']], startY: currentY });
+                    doc.autoTable({ head: [['Visitas e Avistamentos (Imagens)']], startY: currentY, headStyles: { halign: 'center', fillColor: [41, 128, 185] }});
                     currentY = doc.lastAutoTable.finalY + 5;
                 
                     const picaInstance = pica();
@@ -1207,7 +1266,7 @@
                     let rowMaxHeight = 0;
                     let imgHeight = 0; // Declare imgHeight here
                 
-                    for (const s of sightings) {
+                    for (const s of images) {
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(s.photo);
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
@@ -1247,6 +1306,11 @@
                     const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v]);
                     lastY = this._addPdfSection(doc, 'Dados da Garantia', warrantyDetails.filter(d => d[1]), lastY);
                     
+                    if (addresses.length > 0) {
+                        const enderecoSection = addresses.map(addr => [App.AddressManager.formatForPdf(addr)]);
+                        lastY = this._addPdfSection(doc, 'Moradas Cadastradas', enderecoSection, lastY);
+                    }
+
                     lastY = await this._addPdfImages(doc, sightings, lastY);
                     return doc;
                 },
@@ -1314,7 +1378,7 @@
                         body,
                         didDrawPage: (data) => {
                             this._addPdfHeader(doc, `Lista de Casos`);
-                            this._addPdfFooter(doc, footerText);
+                            this._addPdfFooter(doc, footerText + ` | Página ${data.pageNumber}`);
                         },
                         margin: { top: 35 },
                         styles: { fontSize: 10, cellPadding: 2, overflow: 'ellipsize' },
