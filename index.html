@@ -276,34 +276,52 @@
             </div>
         </div>
     </div>
-    <div id="addressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
-        <div class="p-6 rounded-lg shadow-xl max-w-md w-full flex flex-col max-h-[90vh]" style="background-color: var(--card-color);">
-            <h3 id="addressModalTitle" class="text-xl font-bold mb-4 flex-shrink-0">Adicionar Morada(s)</h3>
-            <div class="space-y-4 overflow-y-auto pr-2">
-                <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Cole o texto da(s) morada(s):</label>
-                    <textarea id="addressTextInput" rows="8" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Pode colar múltiplas moradas. O sistema irá tentar separá-las."></textarea>
+    
+    <!-- MODAL DE ENDEREÇO ÚNICO -->
+    <div id="singleAddressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
+        <div class="p-6 rounded-lg shadow-xl max-w-lg w-full flex flex-col max-h-[90vh]" style="background-color: var(--card-color);">
+            <h3 id="singleAddressModalTitle" class="text-xl font-bold mb-4 flex-shrink-0">Adicionar Morada</h3>
+            <div class="space-y-3 overflow-y-auto pr-2">
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2"><label for="address-cep" class="block text-sm font-medium mb-1">CEP</label><input type="text" id="address-cep" placeholder="00000-000" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label class="block text-sm font-medium mb-1">&nbsp;</label><button id="searchCepBtn" class="w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2" style="background-color: var(--primary-color);"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button></div>
                 </div>
-                <div><label class="block text-sm font-medium mb-1" style="color: var(--text-muted-color);">Observações (opcional):</label><textarea id="addressObsInput" rows="3" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Ex: Casa com muro amarelo, portão branco. Falar com..."></textarea></div>
-                 <div id="gps-button-container" class="text-center" style="color: var(--text-muted-color);">OU</div>
-                 <button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização Atual</button>
+                <div><label for="address-logradouro" class="block text-sm font-medium mb-1">Logradouro (Rua/Av.)</label><input type="text" id="address-logradouro" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label for="address-numero" class="block text-sm font-medium mb-1">Número</label><input type="text" id="address-numero" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="address-complemento" class="block text-sm font-medium mb-1">Complemento</label><input type="text" id="address-complemento" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                </div>
+                <div><label for="address-bairro" class="block text-sm font-medium mb-1">Bairro</label><input type="text" id="address-bairro" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2"><label for="address-cidade" class="block text-sm font-medium mb-1">Cidade</label><input type="text" id="address-cidade" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                    <div><label for="address-estado" class="block text-sm font-medium mb-1">UF</label><input type="text" id="address-estado" class="w-full border rounded-md py-2 px-3" style="background-color:var(--input-bg); border-color:var(--border-color);"></div>
+                </div>
+                <div><label for="singleAddress-obs" class="block text-sm font-medium mb-1">Observações</label><textarea id="singleAddress-obs" rows="3" class="w-full border rounded-md px-3 py-2" style="background-color:var(--input-bg); border-color:var(--border-color);" placeholder="Ex: Casa amarela..."></textarea></div>
+                 <div class="text-center pt-2" style="color: var(--text-muted-color);">OU</div>
+                 <button id="useCurrentLocationBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-map-pin"></i> Usar Localização GPS Atual</button>
             </div>
             <div class="flex justify-end gap-4 mt-6 flex-shrink-0">
-                <button id="addressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
-                <button id="addressParseAndSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Analisar e Guardar</button>
+                <button id="singleAddressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
+                <button id="singleAddressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar Morada</button>
             </div>
         </div>
     </div>
-    <div id="addressPreviewModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
+
+    <!-- MODAL DE ENDEREÇO EM LOTE (NOVO) -->
+     <div id="bulkAddressModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4">
         <div class="p-6 rounded-lg shadow-xl max-w-2xl w-full flex flex-col max-h-[90vh]" style="background-color: var(--card-color);">
-            <h3 class="text-xl font-bold mb-4 flex-shrink-0">Confirme as Moradas Encontradas</h3>
-            <div id="addressPreviewContent" class="space-y-3 overflow-y-auto pr-2"></div>
+            <h3 class="text-xl font-bold mb-4 flex-shrink-0">Adicionar Moradas em Lote</h3>
+             <p class="mb-4 text-sm" style="color: var(--text-muted-color);">Cole as moradas abaixo, uma por linha, separadas por tabulação (copiar e colar do Excel).<br>Formato esperado: <code class="p-1 rounded text-xs" style="background-color: var(--input-bg);">Tipo	Endereço	Número	Compl.	Bairro	Cidade	UF	CEP</code></p>
+            <div class="space-y-4 overflow-y-auto pr-2">
+                <textarea id="bulkAddressInput" rows="10" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Cole aqui as moradas..."></textarea>
+            </div>
             <div class="flex justify-end gap-4 mt-6 flex-shrink-0">
-                <button id="addressPreviewCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
-                <button id="addressPreviewConfirmBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Confirmar e Guardar</button>
+                <button id="bulkAddressCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button>
+                <button id="bulkAddressSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar Moradas</button>
             </div>
         </div>
     </div>
+
     <div id="observationModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Observação Geral</h3><div><textarea id="observationTextInput" rows="5" class="w-full border rounded-md px-4 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);" placeholder="Digite a sua anotação sobre o caso..."></textarea></div><div class="flex justify-end gap-4 mt-6"><button id="observationCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="observationSaveBtn" class="px-6 py-2 text-white rounded-lg" style="background-color: var(--primary-color);">Guardar</button></div></div></div>
     <div id="imageSourceModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-sm w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Adicionar Imagem</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha a origem da imagem para a visita.</p><div class="space-y-4"><button id="takePictureBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Tirar Foto</button><button id="chooseGalleryBtn" class="w-full font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 text-lg" style="background-color: var(--card-color); border: 2px solid var(--border-color);"><i class="ph-bold ph-image"></i> Escolher da Galeria</button></div><div class="flex justify-end mt-6"><button id="imageSourceCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button></div></div></div>
     <div id="restoreStrategyModal" class="hidden fixed inset-0 custom-modal z-50 flex items-center justify-center p-4"><div class="p-6 rounded-lg shadow-xl max-w-md w-full" style="background-color: var(--card-color);"><h3 class="text-xl font-bold mb-4">Restaurar Backup</h3><p class="mb-6" style="color: var(--text-muted-color);">Escolha como importar os dados do ficheiro.</p><div class="space-y-4"><button data-strategy="merge" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Mesclar</strong><span class="text-sm">Adiciona novos dados e atualiza existentes. Preserva os dados atuais.</span></button><button data-strategy="overwrite" class="restore-option w-full text-left p-4 rounded-lg"><strong class="block">Sobrescrever</strong><span class="text-sm text-red-400">APAGA TUDO e substitui pelos dados do backup. Use com cuidado.</span></button></div><div class="flex justify-end gap-4 mt-6"><button id="restoreCancelBtn" class="px-6 py-2 rounded-lg" style="background-color: var(--border-color);">Cancelar</button><button id="restoreConfirmBtn" class="px-6 py-2 text-white rounded-lg disabled:opacity-50" style="background-color: var(--primary-color);" disabled>Confirmar</button></div></div></div>
@@ -365,8 +383,20 @@
                     confirmation: document.getElementById('confirmationModal'), confirmationTitle: document.getElementById('confirmationTitle'), confirmationMessage: document.getElementById('confirmationMessage'), confirmOkBtn: document.getElementById('confirmOkBtn'), confirmCancelBtn: document.getElementById('confirmCancelBtn'),
                     resetConfirm: document.getElementById('resetConfirmModal'), resetConfirmInput: document.getElementById('resetConfirmInput'), resetConfirmOkBtn: document.getElementById('resetConfirmOkBtn'), resetCancelBtn: document.getElementById('resetCancelBtn'),
                     editCase: document.getElementById('editCaseModal'), editCaseForm: document.getElementById('editCaseForm'), editCaseSaveBtn: document.getElementById('editCaseSaveBtn'), editCaseCancelBtn: document.getElementById('editCaseCancelBtn'),
-                    address: document.getElementById('addressModal'), addressModalTitle: document.getElementById('addressModalTitle'), addressTextInput: document.getElementById('addressTextInput'), addressObsInput: document.getElementById('addressObsInput'), useCurrentLocationBtn: document.getElementById('useCurrentLocationBtn'), addressParseAndSaveBtn: document.getElementById('addressParseAndSaveBtn'), addressCancelBtn: document.getElementById('addressCancelBtn'),
-                    addressPreview: document.getElementById('addressPreviewModal'), addressPreviewContent: document.getElementById('addressPreviewContent'), addressPreviewConfirmBtn: document.getElementById('addressPreviewConfirmBtn'), addressPreviewCancelBtn: document.getElementById('addressPreviewCancelBtn'),
+                    singleAddress: document.getElementById('singleAddressModal'), singleAddressForm: {
+                        title: document.getElementById('singleAddressModalTitle'),
+                        cep: document.getElementById('address-cep'),
+                        searchCepBtn: document.getElementById('searchCepBtn'),
+                        logradouro: document.getElementById('address-logradouro'),
+                        numero: document.getElementById('address-numero'),
+                        complemento: document.getElementById('address-complemento'),
+                        bairro: document.getElementById('address-bairro'),
+                        cidade: document.getElementById('address-cidade'),
+                        estado: document.getElementById('address-estado'),
+                        obs: document.getElementById('singleAddress-obs'),
+                        useGPS: document.getElementById('useCurrentLocationBtn')
+                    }, singleAddressSaveBtn: document.getElementById('singleAddressSaveBtn'), singleAddressCancelBtn: document.getElementById('singleAddressCancelBtn'),
+                    bulkAddress: document.getElementById('bulkAddressModal'), bulkAddressInput: document.getElementById('bulkAddressInput'), bulkAddressSaveBtn: document.getElementById('bulkAddressSaveBtn'), bulkAddressCancelBtn: document.getElementById('bulkAddressCancelBtn'),
                     observation: document.getElementById('observationModal'), observationTextInput: document.getElementById('observationTextInput'), observationSaveBtn: document.getElementById('observationSaveBtn'), observationCancelBtn: document.getElementById('observationCancelBtn'),
                     restoreStrategy: document.getElementById('restoreStrategyModal'), restoreConfirmBtn: document.getElementById('restoreConfirmBtn'), restoreCancelBtn: document.getElementById('restoreCancelBtn'),
                     imageSource: document.getElementById('imageSourceModal'), takePictureBtn: document.getElementById('takePictureBtn'), chooseGalleryBtn: document.getElementById('chooseGalleryBtn'), imageSourceCancelBtn: document.getElementById('imageSourceCancelBtn'),
@@ -379,7 +409,6 @@
                 currentPlate: null, 
                 cameraStream: null, 
                 editingAddressId: null,
-                parsedAddresses: [],
                 filterState: {
                     status: 'aberto',
                     marca: '',
@@ -455,14 +484,15 @@
                     App.ui.caseResult.addEventListener('click', (e) => {
                         const btn = e.target.closest('button');
                         if (btn) {
-                            if (btn.classList.contains('add-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate });
+                            if (btn.classList.contains('add-address-manual-btn')) App.AddressManager.showSingleAddressModal({ plate: btn.dataset.plate });
+                            else if (btn.classList.contains('add-address-bulk-btn')) App.AddressManager.showBulkAddressModal({ plate: btn.dataset.plate });
                             else if (btn.classList.contains('add-observation-btn')) App.ObservationManager.showObservationModal(btn.dataset.plate);
                             else if (btn.classList.contains('add-sighting-btn')) this.showImageSourceModal(btn.dataset.plate);
                             else if (btn.classList.contains('delete-case-btn')) App.CaseManager.deleteCase(btn.dataset.plate);
                             else if (btn.classList.contains('export-case-pdf-btn')) App.DataManager.exportSingleCasePDF(btn.dataset.plate);
                             else if (btn.classList.contains('edit-case-btn')) App.CaseManager.showEditModal(btn.dataset.plate);
                             else if (btn.classList.contains('toggle-options-btn')) { e.stopPropagation(); this.toggleOptionsMenu(btn); }
-                            else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
+                            else if (btn.classList.contains('edit-address-btn')) App.AddressManager.showSingleAddressModal({ plate: btn.dataset.plate, addressId: parseInt(btn.dataset.addressId) });
                             else if (btn.classList.contains('delete-address-btn')) App.AddressManager.deleteAddress(parseInt(btn.dataset.addressId), btn.dataset.plate);
                         }
 
@@ -486,6 +516,7 @@
                         if (e.target.closest('.case-card-main')) { this.switchTab('search'); App.ui.plateInput.value = card.dataset.plateValue; App.CaseManager.search(card.dataset.plateValue); }
                     });
                     document.addEventListener('click', (e) => {
+                        document.querySelectorAll('.options-menu.show').forEach(m => m.classList.remove('show'));
                         if (!e.target.closest('#plateInput')) {
                             App.ui.plateSuggestions.classList.add('hidden');
                         }
@@ -634,7 +665,6 @@
                     const rest = (count) => (cpf.slice(0, count - 12).reduce((s, e, i) => s + e * (count - i), 0) * 10) % 11 % 10;
                     return rest(10) === cpf[9] && rest(11) === cpf[10];
                 },
-                // Placeholder for CNPJ validation if needed in the future
                 isValidCNPJ(cnpj) {
                     return true; // Simple placeholder
                 }
@@ -646,162 +676,182 @@
             // ADDRESS MANAGER
             // =================================================================================
             App.AddressManager = {
-                async showAddressModal({plate, addressId = null}) { 
+                async showSingleAddressModal({plate, addressId = null}) {
                     App.state.currentPlate = plate; 
                     App.state.editingAddressId = addressId;
+                    const form = App.ui.modals.singleAddressForm;
+                    const modal = App.ui.modals.singleAddress;
                     
-                    App.ui.modals.addressModalTitle.textContent = addressId ? "Editar Morada" : "Adicionar Morada(s)";
-                    App.ui.modals.addressTextInput.value = '';
-                    App.ui.modals.addressObsInput.value = '';
-                    App.ui.modals.useCurrentLocationBtn.style.display = addressId ? 'none' : 'flex';
-                    document.getElementById('gps-button-container').style.display = addressId ? 'none' : 'block';
-                    
-                    if (addressId) {
+                    Object.values(form).forEach(el => { if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = ''; });
+
+                    form.title.textContent = addressId ? "Editar Morada" : "Adicionar Morada";
+                    form.useGPS.style.display = addressId ? 'none' : 'flex';
+
+                    if(addressId) {
                         const addr = await App.DBManager.get(STORE_ADDRESSES, addressId);
-                        App.ui.modals.addressTextInput.value = addr.tipo === 'GPS' ? '' : this.formatForEdit(addr);
-                        App.ui.modals.addressObsInput.value = addr.observacoes || '';
+                        if (addr.tipo === 'GPS') {
+                           form.obs.value = `Morada de GPS: Lat ${addr.latitude.toFixed(4)}, Lon ${addr.longitude.toFixed(4)}\n\n${addr.observacoes || ''}`;
+                           Object.values(form).forEach(el => { if(el.tagName === 'INPUT') el.disabled = true; });
+                           App.ui.modals.singleAddressSaveBtn.disabled = true;
+                        } else {
+                           Object.values(form).forEach(el => { if(el.tagName === 'INPUT') el.disabled = false; });
+                           App.ui.modals.singleAddressSaveBtn.disabled = false;
+                           form.cep.value = addr.cep || '';
+                           form.logradouro.value = addr.logradouro || '';
+                           form.numero.value = addr.numero || '';
+                           form.complemento.value = addr.complemento || '';
+                           form.bairro.value = addr.bairro || '';
+                           form.cidade.value = addr.cidade || '';
+                           form.estado.value = addr.estado || '';
+                           form.obs.value = addr.observacoes || '';
+                        }
+                    } else {
+                        Object.values(form).forEach(el => { if(el.tagName === 'INPUT') el.disabled = false; });
+                        App.ui.modals.singleAddressSaveBtn.disabled = false;
                     }
+
+                    modal.classList.remove('hidden');
+                    form.cep.focus();
+                },
+                hideSingleAddressModal() {
+                    App.ui.modals.singleAddress.classList.add('hidden');
+                },
+                async fetchCEP() {
+                    const cepInput = App.ui.modals.singleAddressForm.cep;
+                    const cep = cepInput.value.replace(/\D/g, '');
+                    if (cep.length !== 8) return;
                     
-                    App.ui.modals.address.classList.remove('hidden'); 
-                },
-                hideAddressModal:()=>App.ui.modals.address.classList.add('hidden'),
-                handleParseAndSave: async function () {
-                    App.AddressManager.hideAddressModal();
-                    const text = App.ui.modals.addressTextInput.value.trim();
-                    const obs = App.ui.modals.addressObsInput.value.trim();
-                    if (!text) {
-                        App.UIManager.showToast('O campo de morada está vazio.', 'error');
-                        return;
-                    }
-
-                    App.UIManager.showLoading("A analisar moradas...");
+                    App.UIManager.showLoading('Buscando CEP...');
                     try {
-                        const parsedAddresses = App.AddressParser.parseBlock(text);
+                        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                        const data = await response.json();
+                        if (data.erro) {
+                            throw new Error('CEP não encontrado.');
+                        }
+                        const form = App.ui.modals.singleAddressForm;
+                        form.logradouro.value = data.logradouro || '';
+                        form.bairro.value = data.bairro || '';
+                        form.cidade.value = data.localidade || '';
+                        form.estado.value = data.uf || '';
+                        form.numero.focus();
+                        App.UIManager.showToast('CEP encontrado!', 'success');
+                    } catch (e) {
+                         const continueAnyway = await App.UIManager.showConfirmation(
+                            'Falha na Busca', 
+                            "CEP não encontrado ou inválido. Deseja continuar com a inserção manual?"
+                        );
+                        if (!continueAnyway) {
+                             const form = App.ui.modals.singleAddressForm;
+                             form.cep.value = '';
+                        }
+                    } finally {
                         App.UIManager.hideLoading();
+                    }
+                },
+                async saveSingleAddress() {
+                    const form = App.ui.modals.singleAddressForm;
+                    const addressData = {
+                        id: App.state.editingAddressId || Date.now(),
+                        placaNormalizada: App.state.currentPlate,
+                        tipo: 'Manual',
+                        cep: form.cep.value,
+                        logradouro: form.logradouro.value,
+                        numero: form.numero.value,
+                        complemento: form.complemento.value,
+                        bairro: form.bairro.value,
+                        cidade: form.cidade.value,
+                        estado: form.estado.value,
+                        observacoes: form.obs.value,
+                        timestamp: new Date()
+                    };
 
-                        if (parsedAddresses.length === 0) {
-                            App.UIManager.showToast('Nenhuma morada válida encontrada no texto.', 'error');
-                            return;
-                        }
-                        
-                        if (obs) {
-                            parsedAddresses.forEach(addr => addr.observacoes = obs);
-                        }
-                        
-                        App.state.parsedAddresses = parsedAddresses;
-                        this.showAddressPreview(parsedAddresses);
-                    } catch (error) {
-                        App.UIManager.hideLoading();
-                        App.UIManager.showToast('Erro ao processar moradas: ' + error.message, 'error');
-                        console.error('Erro em handleParseAndSave:', error);
+                    if (!addressData.logradouro && !addressData.cep) {
+                        return App.UIManager.showToast('Preencha pelo menos o CEP ou o Logradouro.', 'error');
                     }
-                },
-                showAddressPreview(parsedList) {
-                    const contentEl = App.ui.modals.addressPreviewContent;
-                    contentEl.innerHTML = '';
-                    parsedList.forEach((addr, index) => {
-                        contentEl.innerHTML += `
-                            <div class="p-3 rounded-lg" style="background-color: var(--input-bg);">
-                                <p class="font-bold">Morada ${index + 1}:</p>
-                                <p class="text-sm">${this.format(addr)}</p>
-                            </div>
-                        `;
-                    });
-                    App.ui.modals.addressPreview.classList.remove('hidden');
-                },
-                hideAddressPreview() {
-                     App.ui.modals.addressPreview.classList.add('hidden');
-                },
-                async confirmAndSaveAddresses() {
-                    App.UIManager.showLoading("A guardar moradas...");
-                    for (const addr of App.state.parsedAddresses) {
-                        addr.placaNormalizada = App.state.currentPlate;
-                        await App.DBManager.put(STORE_ADDRESSES, addr);
-                    }
-                    this.hideAddressPreview();
-                    App.UIManager.showToast(`${App.state.parsedAddresses.length} morada(s) guardada(s)!`, 'success');
+
+                    await App.DBManager.put(STORE_ADDRESSES, addressData);
+                    this.hideSingleAddressModal();
+                    App.UIManager.showToast('Morada guardada!', 'success');
                     App.CaseManager.search(App.state.currentPlate);
                 },
-
                 async saveFromGPS() {
-                    const obs = App.ui.modals.addressObsInput.value;
+                    const obs = App.ui.modals.singleAddressForm.obs.value;
+                    App.UIManager.showLoading("Obtendo localização...");
                     const loc=await App.PermissionsManager.getLocation();
+                    App.UIManager.hideLoading();
+
                     if(!loc) return;
-                    await App.DBManager.put(STORE_ADDRESSES,{tipo:'GPS',latitude:loc.lat,longitude:loc.lon,observacoes:obs,placaNormalizada:App.state.currentPlate});
-                    this.hideAddressModal();
+
+                    await App.DBManager.put(STORE_ADDRESSES,{
+                        id: Date.now(),
+                        placaNormalizada: App.state.currentPlate,
+                        tipo:'GPS', 
+                        latitude:loc.lat, 
+                        longitude:loc.lon, 
+                        observacoes:obs, 
+                        timestamp: new Date()
+                    });
+                    this.hideSingleAddressModal();
                     App.UIManager.showToast('Morada GPS guardada!', 'success');
                     App.CaseManager.search(App.state.currentPlate);
                 },
-                formatForEdit(addr) { return `${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'}, ${addr.bairro||''}, ${addr.cidade||''}, ${addr.estado||''}, ${addr.cep||''}`.trim(); },
-                format(addr) { let b=(addr.tipo==='GPS')?`📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})`:`🏠 ${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();if(addr.observacoes)b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;return b},
-                formatForPdf(addr) { let b=(addr.tipo==='GPS')?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`:`Morada: ${addr.tipoLogradouro || ''} ${addr.logradouro||''}, ${addr.numero||'S/N'} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();if(addr.observacoes)b+=`\nObs: ${addr.observacoes}`;return b},
-                async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.tipoLogradouro || ''} ${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
-                async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Morada','Deseja apagar esta morada?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Morada excluída.','success');App.CaseManager.search(p)}}
-            };
-            
-            // =================================================================================
-            // ADDRESS PARSER
-            // =================================================================================
-            App.AddressParser = {
-                parseBlock(text) {
-                    const blocks = text
-                        .split(/\n{2,}|(?=CEP\s?\d{5}-?\d{3})/i)
-                        .map(b => b.trim())
-                        .filter(b => b.length > 20);
+                showBulkAddressModal({plate}) {
+                    App.state.currentPlate = plate;
+                    App.ui.modals.bulkAddressInput.value = '';
+                    App.ui.modals.bulkAddress.classList.remove('hidden');
+                },
+                hideBulkAddressModal() {
+                    App.ui.modals.bulkAddress.classList.add('hidden');
+                },
+                async parseAndSaveBulkAddresses() {
+                    const text = App.ui.modals.bulkAddressInput.value.trim();
+                    if (!text) return App.UIManager.showToast('A caixa de texto está vazia.', 'error');
 
-                    const parsedAddresses = [];
-
-                    for (const block of blocks) {
-                        const formattedBlock = block
-                            .replace(/([a-z])([A-Z])/g, '$1 $2')
-                            .replace(/UFCEP/g, 'UF CEP');
-
-                        const addr = this.parseSingle(formattedBlock);
-                        
-                        if (addr.logradouro || addr.cidade || addr.cep) {
-                            parsedAddresses.push(addr);
+                    App.UIManager.showLoading(`Processando moradas...`);
+                    const lines = text.split('\n').filter(line => line.trim().length > 0);
+                    let savedCount = 0;
+                    
+                    for (const line of lines) {
+                        const parts = line.split('\t');
+                        const addressData = {
+                            id: Date.now() + savedCount, // Simple unique ID
+                            placaNormalizada: App.state.currentPlate,
+                            tipo: parts[0] || 'Manual',
+                            logradouro: parts[1] || '',
+                            numero: parts[2] || '',
+                            complemento: parts[3] || '',
+                            bairro: parts[4] || '',
+                            cidade: parts[5] || '',
+                            estado: parts[6] || '',
+                            cep: parts[7] || '',
+                            timestamp: new Date()
+                        };
+                        if (addressData.logradouro || addressData.cep) {
+                             await App.DBManager.put(STORE_ADDRESSES, addressData);
+                             savedCount++;
                         }
                     }
-                    return parsedAddresses;
+
+                    this.hideBulkAddressModal();
+                    App.UIManager.showToast(`${savedCount} de ${lines.length} moradas guardadas!`, 'success');
+                    App.CaseManager.search(App.state.currentPlate);
                 },
-
-                parseSingle(text) {
-                     const R = (txt, regex) => {
-                        const match = txt.match(regex);
-                        return match ? match[1].trim() : null;
-                    };
-
-                    let cleanText = ` ${text.replace(/[.,]/g, ' ')} `;
-
-                    const addr = {};
-                    addr.tipo = R(cleanText, /(Residencial|Comercial|Outros)/i);
-                    const tipoLogradouroMatch = cleanText.match(/\b(Rua|Av|Avenida|Est|Estrada|Travessa|Tv)\b/i);
-                    addr.tipoLogradouro = tipoLogradouroMatch ? tipoLogradouroMatch[0] : null;
-
-                    addr.cep = R(cleanText, /CEP\s?(\d{5}-?\d{3})/i);
-                    addr.estado = R(cleanText, /\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
-                    
-                    const cityMatch = cleanText.match(/\b([A-Z][a-záéíóúãõç]+(?:\s+[A-Z][a-záéíóúãõç]+)*)\b/gi);
-                    addr.cidade = cityMatch ? cityMatch.slice(-1)[0] : null;
-
-                    const numMatch = cleanText.match(/(?:Número|Num|N[º°]?)\s*(\d{1,5})/i) || cleanText.match(/\b\d{1,5}\b/);
-                    addr.numero = numMatch ? (numMatch[1] || numMatch[0]) : null;
-
-                    const bairroMatch = cleanText.match(/(?:Bairro|Setor|St|Jd|Jardim)\s*([\w\s]+?)(?=,|$|\d{5}-\d{3})/i);
-                    addr.bairro = bairroMatch ? bairroMatch[1].trim() : null;
-
-                    addr.logradouro = cleanText
-                        .replace(/(Residencial|Comercial|Outros|Rua|Av|Avenida|Est|Estrada|Travessa|Tv|Número|Num|N[º°]?|CEP|Bairro|Setor|Jardim|Jd)/gi, '')
-                        .replace(addr.cep || '', '')
-                        .replace(addr.numero || '', '')
-                        .replace(addr.bairro || '', '')
-                        .replace(addr.cidade || '', '')
-                        .replace(addr.estado || '', '')
-                        .replace(/\s+/g, ' ')
-                        .trim();
-
-                    return addr;
-                }
+                format(addr) { 
+                    let b = (addr.tipo === 'GPS') 
+                        ? `📍 GPS (${addr.latitude.toFixed(4)}, ${addr.longitude.toFixed(4)})` 
+                        : `🏠 ${addr.logradouro||''}, ${addr.numero||'S/N'} ${addr.complemento ? `(${addr.complemento})` : ''} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();
+                    if(addr.observacoes) b+=`<br><span class="text-xs italic" style="color:var(--text-muted-color);"><i class="ph-bold ph-chat-text"></i> ${addr.observacoes}</span>`;
+                    return b;
+                },
+                formatForPdf(addr) { 
+                    let b = (addr.tipo === 'GPS')
+                        ?`GPS: (${addr.latitude.toFixed(4)},${addr.longitude.toFixed(4)})`
+                        :`Morada: ${addr.logradouro||''}, ${addr.numero||'S/N'} ${addr.complemento ? `(${addr.complemento})` : ''} - ${addr.bairro||''}, ${addr.cidade||''}/${addr.estado||''}`.trim();
+                    if(addr.observacoes) b+=`\nObs: ${addr.observacoes}`;
+                    return b;
+                },
+                async navigate(id) { const a=await App.DBManager.get(STORE_ADDRESSES,id);if(!a)return;const q=a.tipo==='GPS'?`${a.latitude},${a.longitude}`:`${a.logradouro}, ${a.numero}, ${a.cidade}, ${a.estado}`;window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank')},
+                async deleteAddress(id,p) { if(await App.UIManager.showConfirmation('Excluir Morada','Deseja apagar esta morada?')){await App.DBManager.delete(STORE_ADDRESSES,id);App.UIManager.showToast('Morada excluída.','success');App.CaseManager.search(p)}}
             };
             
             // =================================================================================
@@ -925,7 +975,27 @@
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Informações do Contrato</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${contractDetails}</div></div>
                         <div><h3 class="text-xl font-bold pb-2 mb-3" style="color:var(--primary-color); border-bottom: 2px solid var(--border-color);">Dados da Garantia</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">${warrantyDetails}</div></div>
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Observações Gerais</h3><button data-plate="${caseData.placaNormalizada}" class="add-observation-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${observationsHtml}</ul></div>
-                        <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Moradas</h3><button data-plate="${caseData.placaNormalizada}" class="add-address-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-plus"></i> Adicionar</button></div><ul class="space-y-2">${addressesHtml}</ul></div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);">
+                                <h3 class="text-xl font-bold" style="color:var(--primary-color);">Moradas</h3>
+                                <div class="relative options-menu-container">
+                                    <button title="Adicionar Morada" class="toggle-options-btn text-white font-bold p-2 rounded-full flex items-center justify-center" style="background-color: var(--primary-color);">
+                                        <i class="ph-bold ph-plus text-lg"></i>
+                                    </button>
+                                    <div class="options-menu w-48">
+                                        <button data-plate="${caseData.placaNormalizada}" class="add-address-manual-btn w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                                            <i class="ph-bold ph-user"></i> Manual
+                                        </button>
+                                        <button data-plate="${caseData.placaNormalizada}" class="add-address-bulk-btn w-full text-left px-4 py-2 hover:bg-slate-700 flex items-center gap-2">
+                                            <i class="ph-bold ph-upload-simple"></i> Em Lote
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <ul class="space-y-2">${addressesHtml}</ul>
+                        </div>
+
                         <div><div class="flex justify-between items-center pb-2 mb-3" style="border-bottom: 2px solid var(--border-color);"><h3 class="text-xl font-bold" style="color:var(--primary-color);">Visitas e Avistamentos</h3><button data-plate="${caseData.placaNormalizada}" class="add-sighting-btn text-white font-bold py-1 px-3 rounded-md flex items-center gap-1 text-sm" style="background-color: var(--primary-color);"><i class="ph-bold ph-camera"></i> Adicionar</button></div><ul class="space-y-2">${sightingsHtml}</ul></div>
                     </div>`;
                     App.ui.caseResult.classList.remove('hidden');
@@ -1244,7 +1314,7 @@
                         doc.text(footerText, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
                     }
                 },
-                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title, '']], body, startY, theme: 'grid', headStyles: { halign: 'center', fillColor: [41, 128, 185] }, columnStyles: { 0: { cellWidth: 'auto'} } }); return doc.lastAutoTable.finalY + 10; } return startY; },
+                _addPdfSection(doc, title, body, startY) { if(body.length > 0){ doc.autoTable({ head: [[title]], body, startY, theme: 'grid', headStyles: { halign: 'center', fillColor: [41, 128, 185] } }); return doc.lastAutoTable.finalY + 10; } return startY; },
                 
                 async _addPdfImages(doc, sightings, startY) {
                     const images = sightings.filter(s => s.photo);
@@ -1264,14 +1334,14 @@
                     const imgMargin = 5;
                     let x = 14;
                     let rowMaxHeight = 0;
-                    let imgHeight = 0; // Declare imgHeight here
+                    let imgHeight = 0;
                 
                     for (const s of images) {
                         const offscreenCanvas = document.createElement('canvas');
                         const img = await createImageBitmap(s.photo);
                         const resizedCanvas = await picaInstance.resize(img, offscreenCanvas);
                         const dataUrl = resizedCanvas.toDataURL('image/jpeg', 0.7);
-                        imgHeight = (img.height / img.width) * imgWidth; // Assign value inside the loop
+                        imgHeight = (img.height / img.width) * imgWidth;
                         rowMaxHeight = Math.max(rowMaxHeight, imgHeight);
                 
                         if (x + imgWidth > doc.internal.pageSize.width - 14) {
@@ -1297,18 +1367,28 @@
                     
                     this._addPdfHeader(doc, `Relatório do Caso: ${caseData.garantia.placa}`);
                     let lastY = 35;
+
                     const caseDetails = [
                         ['Cliente', caseData.cliente], ['CPF', caseData.cpf], ['Telefone', caseData.telefone],
                         ['Contrato', caseData.contrato], ['Atraso Desde', caseData.atrasoDesde],
-                    ];
-                    lastY = this._addPdfSection(doc, 'Informações do Contrato', caseDetails.filter(d => d[1]), lastY);
+                    ].map(d => [d[0], d[1] || 'N/A']);
+                    doc.autoTable({ head: [['Informações do Contrato', '']], body: caseDetails, startY: lastY, theme: 'grid', headStyles: { halign: 'center', fillColor: [41, 128, 185] } });
+                    lastY = doc.lastAutoTable.finalY + 10;
                     
-                    const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v]);
-                    lastY = this._addPdfSection(doc, 'Dados da Garantia', warrantyDetails.filter(d => d[1]), lastY);
+                    const warrantyDetails = Object.entries(caseData.garantia).map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), v || 'N/A']);
+                    doc.autoTable({ head: [['Dados da Garantia', '']], body: warrantyDetails, startY: lastY, theme: 'grid', headStyles: { halign: 'center', fillColor: [41, 128, 185] } });
+                    lastY = doc.lastAutoTable.finalY + 10;
                     
                     if (addresses.length > 0) {
                         const enderecoSection = addresses.map(addr => [App.AddressManager.formatForPdf(addr)]);
                         lastY = this._addPdfSection(doc, 'Moradas Cadastradas', enderecoSection, lastY);
+                    }
+                    
+                    if (observations.length > 0) {
+                        const observationSection = observations
+                            .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
+                            .map(obs => [`${new Date(obs.timestamp).toLocaleString('pt-BR')}:\n${obs.text}`]);
+                        lastY = this._addPdfSection(doc, 'Observações Gerais', observationSection, lastY);
                     }
 
                     lastY = await this._addPdfImages(doc, sightings, lastY);
@@ -1514,11 +1594,21 @@
                 App.ui.modals.closePhotoViewBtn.onclick = () => App.UIManager.hidePhoto();
                 App.ui.modals.editCaseSaveBtn.onclick = () => App.CaseManager.saveCaseChanges();
                 App.ui.modals.editCaseCancelBtn.onclick = () => App.CaseManager.hideEditModal();
-                App.ui.modals.addressParseAndSaveBtn.onclick = () => App.AddressManager.handleParseAndSave();
-                App.ui.modals.addressPreviewConfirmBtn.onclick = () => App.AddressManager.confirmAndSaveAddresses();
-                App.ui.modals.addressPreviewCancelBtn.onclick = () => App.AddressManager.hideAddressPreview();
-                App.ui.modals.useCurrentLocationBtn.onclick = () => App.AddressManager.saveFromGPS();
-                App.ui.modals.addressCancelBtn.onclick = () => App.AddressManager.hideAddressModal();
+                
+                // --- LISTENERS PARA O MODAL DE ENDEREÇO ---
+                App.ui.modals.singleAddressForm.searchCepBtn.onclick = () => App.AddressManager.fetchCEP();
+                App.ui.modals.singleAddressForm.cep.addEventListener('blur', (e) => {
+                    const cep = e.target.value.replace(/\D/g, '');
+                    if (cep.length === 8) App.AddressManager.fetchCEP();
+                });
+                App.ui.modals.singleAddressSaveBtn.onclick = () => App.AddressManager.saveSingleAddress();
+                App.ui.modals.singleAddressCancelBtn.onclick = () => App.AddressManager.hideSingleAddressModal();
+                App.ui.modals.singleAddressForm.useGPS.onclick = () => App.AddressManager.saveFromGPS();
+                
+                // --- LISTENERS PARA O MODAL DE ENDEREÇO EM LOTE ---
+                App.ui.modals.bulkAddressSaveBtn.onclick = () => App.AddressManager.parseAndSaveBulkAddresses();
+                App.ui.modals.bulkAddressCancelBtn.onclick = () => App.AddressManager.hideBulkAddressModal();
+
                 App.ui.modals.observationSaveBtn.onclick = () => App.ObservationManager.saveObservation();
                 App.ui.modals.observationCancelBtn.onclick = () => App.ObservationManager.hideObservationModal();
                 App.ui.modals.takePictureBtn.onclick = async () => { 
